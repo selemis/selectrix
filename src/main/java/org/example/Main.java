@@ -1,18 +1,21 @@
 package org.example;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class Main extends JFrame {
-    private DefaultListModel<FileCheckBox> listModel;
-    private JList<FileCheckBox> fileList;
+    private JTable fileTable;
+    private FileTableModel tableModel;
 
     public Main() {
         setTitle("File Selector");
-        setSize(800, 600);
+        setSize(1000, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -28,37 +31,30 @@ public class Main extends JFrame {
 
         // Create Open Folder menu item
         JMenuItem openFolderItem = new JMenuItem("Open Folder");
-        openFolderItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openFolder();
-            }
-        });
+        openFolderItem.addActionListener(e -> openFolder());
 
         fileMenu.add(openFolderItem);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
-        // Create list model and list for displaying files
-        listModel = new DefaultListModel<>();
-        fileList = new JList<>(listModel);
-        fileList.setCellRenderer(new CheckBoxListRenderer());
-        fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        // Create table model and table
+        tableModel = new FileTableModel();
+        fileTable = new JTable(tableModel);
 
-        // Add mouse listener to toggle checkboxes
-        fileList.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int index = fileList.locationToIndex(evt.getPoint());
-                if (index != -1) {
-                    FileCheckBox item = listModel.getElementAt(index);
-                    item.setSelected(!item.isSelected());
-                    fileList.repaint();
-                }
-            }
-        });
+        // Configure table
+        fileTable.setRowHeight(25);
+        fileTable.setFillsViewportHeight(true);
+
+        // Set column widths
+        fileTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // Checkbox
+        fileTable.getColumnModel().getColumn(0).setMaxWidth(50);
+        fileTable.getColumnModel().getColumn(1).setPreferredWidth(80);  // Type
+        fileTable.getColumnModel().getColumn(2).setPreferredWidth(300); // Name
+        fileTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Size
+        fileTable.getColumnModel().getColumn(4).setPreferredWidth(150); // Date
 
         // Add scroll pane
-        JScrollPane scrollPane = new JScrollPane(fileList);
+        JScrollPane scrollPane = new JScrollPane(fileTable);
         add(scrollPane, BorderLayout.CENTER);
     }
 
@@ -75,22 +71,113 @@ public class Main extends JFrame {
     }
 
     private void loadFolderContents(File folder) {
-        listModel.clear();
+        tableModel.clear();
 
         File[] files = folder.listFiles();
         if (files != null) {
             for (File file : files) {
-                listModel.addElement(new FileCheckBox(file));
+                tableModel.addFile(file);
             }
         }
     }
 
-    // Inner class to represent a file with checkbox state
-    private static class FileCheckBox {
+    // Custom table model for file data
+    private static class FileTableModel extends AbstractTableModel {
+        private final String[] columnNames = {"Select", "Type", "Name", "Size", "Modified Date"};
+        private final List<FileRow> rows = new ArrayList<>();
+        private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        @Override
+        public int getRowCount() {
+            return rows.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columnNames[column];
+        }
+
+        @Override
+        public Class<?> getColumnClass(int columnIndex) {
+            switch (columnIndex) {
+                case 0:
+                    return Boolean.class;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    return String.class;
+                default:
+                    return Object.class;
+            }
+        }
+
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            return columnIndex == 0; // Only checkbox column is editable
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            FileRow row = rows.get(rowIndex);
+            switch (columnIndex) {
+                case 0:
+                    return row.isSelected();
+                case 1:
+                    return row.getFile().isDirectory() ? "Directory" : "File";
+                case 2:
+                    return row.getFile().getName();
+                case 3:
+                    return row.getFile().isDirectory() ? "" : formatFileSize(row.getFile().length());
+                case 4:
+                    return dateFormat.format(new Date(row.getFile().lastModified()));
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+            if (columnIndex == 0) {
+                rows.get(rowIndex).setSelected((Boolean) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
+            }
+        }
+
+        public void addFile(File file) {
+            rows.add(new FileRow(file));
+            fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
+        }
+
+        public void clear() {
+            rows.clear();
+            fireTableDataChanged();
+        }
+
+        private String formatFileSize(long size) {
+            if (size < 1024) {
+                return size + " B";
+            } else if (size < 1024 * 1024) {
+                return String.format("%.2f KB", size / 1024.0);
+            } else if (size < 1024 * 1024 * 1024) {
+                return String.format("%.2f MB", size / (1024.0 * 1024));
+            } else {
+                return String.format("%.2f GB", size / (1024.0 * 1024 * 1024));
+            }
+        }
+    }
+
+    // Inner class to represent a file row with checkbox state
+    private static class FileRow {
         private final File file;
         private boolean selected;
 
-        public FileCheckBox(File file) {
+        public FileRow(File file) {
             this.file = file;
             this.selected = false;
         }
@@ -106,43 +193,9 @@ public class Main extends JFrame {
         public void setSelected(boolean selected) {
             this.selected = selected;
         }
-
-        @Override
-        public String toString() {
-            return file.getName();
-        }
-    }
-
-    // Custom cell renderer to display checkboxes
-    private static class CheckBoxListRenderer extends JCheckBox implements ListCellRenderer<FileCheckBox> {
-        @Override
-        public Component getListCellRendererComponent(JList<? extends FileCheckBox> list,
-                                                      FileCheckBox value,
-                                                      int index,
-                                                      boolean isSelected,
-                                                      boolean cellHasFocus) {
-            setEnabled(list.isEnabled());
-            setSelected(value.isSelected());
-            setFont(list.getFont());
-            setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
-            setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());
-
-            String displayText = value.getFile().getName();
-            if (value.getFile().isDirectory()) {
-                displayText = "[DIR] " + displayText;
-            }
-            setText(displayText);
-
-            return this;
-        }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new Main().setVisible(true);
-            }
-        });
+        SwingUtilities.invokeLater(() -> new Main().setVisible(true));
     }
 }
