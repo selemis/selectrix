@@ -1,5 +1,8 @@
 package org.example;
 
+import org.example.plugin.FileAction;
+import org.example.plugin.PluginLoader;
+
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -13,13 +16,18 @@ import java.util.List;
 public class Main extends JFrame {
     private JTable fileTable;
     private FileTableModel tableModel;
-    private JComboBox<String> actionComboBox;
+    private JComboBox<FileAction> actionComboBox;
+    private List<FileAction> availableActions;
 
     public Main() {
         setTitle("File Selector");
         setSize(1000, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        // Load plugins
+        availableActions = PluginLoader.loadPlugins();
+        System.out.println("Loaded " + availableActions.size() + " plugin(s)");
 
         initComponents();
     }
@@ -53,9 +61,23 @@ public class Main extends JFrame {
         JButton processFilesButton = new JButton("Process Files");
         processFilesButton.addActionListener(e -> processFiles());
 
-        // Create action combo box
-        String[] actions = {"Print Filenames", "Copy Files", "Move Files", "Delete Files"};
-        actionComboBox = new JComboBox<>(actions);
+        // Create action combo box with loaded plugins
+        actionComboBox = new JComboBox<>();
+        for (FileAction action : availableActions) {
+            actionComboBox.addItem(action);
+        }
+        // Custom renderer to display action names
+        actionComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                                                          int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof FileAction) {
+                    setText(((FileAction) value).getActionName());
+                }
+                return this;
+            }
+        });
 
         buttonPanel.add(selectAllButton);
         buttonPanel.add(deselectAllButton);
@@ -135,54 +157,39 @@ public class Main extends JFrame {
             return;
         }
 
-        String selectedAction = (String) actionComboBox.getSelectedItem();
+        FileAction selectedAction = (FileAction) actionComboBox.getSelectedItem();
+        if (selectedAction == null) {
+            JOptionPane.showMessageDialog(this,
+                "No action selected!",
+                "Warning",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-        // Perform action on each selected file
-        System.out.println("Processing " + selectedFiles.size() + " file(s) with action: " + selectedAction);
+        // Perform action on each selected file using the plugin
+        System.out.println("Processing " + selectedFiles.size() + " file(s) with action: " + selectedAction.getActionName());
+        int successCount = 0;
+        int errorCount = 0;
+
         for (File file : selectedFiles) {
-            performAction(file, selectedAction);
+            try {
+                selectedAction.execute(file);
+                successCount++;
+            } catch (Exception e) {
+                errorCount++;
+                System.err.println("Error processing " + file.getName() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
         }
-        System.out.println("Processing complete.");
-    }
 
-    private void performAction(File file, String action) {
-        // This is where the action is performed on each file
-        // Different actions based on the combo box selection
-        switch (action) {
-            case "Print Filenames":
-                printFilename(file);
-                break;
-            case "Copy Files":
-                copyFile(file);
-                break;
-            case "Move Files":
-                moveFile(file);
-                break;
-            case "Delete Files":
-                deleteFile(file);
-                break;
-            default:
-                System.out.println("Unknown action: " + action);
+        System.out.println("Processing complete. Success: " + successCount + ", Errors: " + errorCount);
+
+        if (errorCount > 0) {
+            JOptionPane.showMessageDialog(this,
+                "Processing completed with errors.\nSuccess: " + successCount + "\nErrors: " + errorCount,
+                "Processing Result",
+                JOptionPane.WARNING_MESSAGE);
         }
-    }
-
-    private void printFilename(File file) {
-        System.out.println("  - " + file.getName());
-    }
-
-    private void copyFile(File file) {
-        // TODO: Implement copy functionality
-        System.out.println("  - Copy: " + file.getName() + " (not yet implemented)");
-    }
-
-    private void moveFile(File file) {
-        // TODO: Implement move functionality
-        System.out.println("  - Move: " + file.getName() + " (not yet implemented)");
-    }
-
-    private void deleteFile(File file) {
-        // TODO: Implement delete functionality
-        System.out.println("  - Delete: " + file.getName() + " (not yet implemented)");
     }
 
     // Custom table model for file data
