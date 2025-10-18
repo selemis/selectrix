@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'groovy'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    maven {
+        url 'https://pkgs.dev.azure.com/interamerican/_packaging/interamerican/maven/v1'
+        name 'interamerican'
+        credentials {
+            username = project.findProperty('systemProp.https.proxyUser') ?: System.getenv('AZURE_DEVOPS_USER')
+            password = project.findProperty('systemProp.https.proxyPassword') ?: System.getenv('AZURE_DEVOPS_PASSWORD')
+        }
+        authentication {
+            basic(BasicAuthentication)
+        }
+    }
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.spockframework:spock-bom:2.3-groovy-3.0')
+    testImplementation 'org.spockframework:spock-core'
+    testImplementation 'org.codehaus.groovy:groovy-all:3.0.21'
+}
+
+test {
+    useJUnitPlatform()
+}
