@@ -13,6 +13,7 @@ import java.util.List;
 public class Main extends JFrame {
     private JTable fileTable;
     private FileTableModel tableModel;
+    private JComboBox<String> actionComboBox;
 
     public Main() {
         setTitle("File Selector");
@@ -52,8 +53,14 @@ public class Main extends JFrame {
         JButton processFilesButton = new JButton("Process Files");
         processFilesButton.addActionListener(e -> processFiles());
 
+        // Create action combo box
+        String[] actions = {"Print Filenames", "Copy Files", "Move Files", "Delete Files"};
+        actionComboBox = new JComboBox<>(actions);
+
         buttonPanel.add(selectAllButton);
         buttonPanel.add(deselectAllButton);
+        buttonPanel.add(new JLabel("Action:"));
+        buttonPanel.add(actionComboBox);
         buttonPanel.add(processFilesButton);
 
         add(buttonPanel, BorderLayout.NORTH);
@@ -128,18 +135,54 @@ public class Main extends JFrame {
             return;
         }
 
+        String selectedAction = (String) actionComboBox.getSelectedItem();
+
         // Perform action on each selected file
-        System.out.println("Processing " + selectedFiles.size() + " file(s):");
+        System.out.println("Processing " + selectedFiles.size() + " file(s) with action: " + selectedAction);
         for (File file : selectedFiles) {
-            performAction(file);
+            performAction(file, selectedAction);
         }
         System.out.println("Processing complete.");
     }
 
-    private void performAction(File file) {
+    private void performAction(File file, String action) {
         // This is where the action is performed on each file
-        // For now, just print the filename
+        // Different actions based on the combo box selection
+        switch (action) {
+            case "Print Filenames":
+                printFilename(file);
+                break;
+            case "Copy Files":
+                copyFile(file);
+                break;
+            case "Move Files":
+                moveFile(file);
+                break;
+            case "Delete Files":
+                deleteFile(file);
+                break;
+            default:
+                System.out.println("Unknown action: " + action);
+        }
+    }
+
+    private void printFilename(File file) {
         System.out.println("  - " + file.getName());
+    }
+
+    private void copyFile(File file) {
+        // TODO: Implement copy functionality
+        System.out.println("  - Copy: " + file.getName() + " (not yet implemented)");
+    }
+
+    private void moveFile(File file) {
+        // TODO: Implement move functionality
+        System.out.println("  - Move: " + file.getName() + " (not yet implemented)");
+    }
+
+    private void deleteFile(File file) {
+        // TODO: Implement delete functionality
+        System.out.println("  - Delete: " + file.getName() + " (not yet implemented)");
     }
 
     // Custom table model for file data
