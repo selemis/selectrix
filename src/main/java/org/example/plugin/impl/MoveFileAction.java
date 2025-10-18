@@ -1,5 +1,6 @@
 package org.example.plugin.impl;
 
+import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 
 import java.io.File;
@@ -16,9 +17,9 @@ public class MoveFileAction implements FileAction {
     }
 
     @Override
-    public void execute(File file) throws Exception {
+    public void execute(File file, ActionLogger logger) throws Exception {
         // TODO: Implement move functionality
-        System.out.println("  - Move: " + file.getName() + " (not yet implemented)");
+        logger.info("  - Move: " + file.getName() + " (not yet implemented)");
     }
 
     @Override

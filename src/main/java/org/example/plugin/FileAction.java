@@ -17,9 +17,10 @@ public interface FileAction {
     /**
      * Executes the action on the given file.
      * @param file The file to process
+     * @param logger Logger for outputting messages to the GUI console
      * @throws Exception if the action fails
      */
-    void execute(File file) throws Exception;
+    void execute(File file, ActionLogger logger) throws Exception;
 
     /**
      * Returns a description of what this action does.

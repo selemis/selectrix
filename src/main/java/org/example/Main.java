@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 import org.example.plugin.PluginLoader;
 
@@ -18,6 +19,7 @@ public class Main extends JFrame {
     private FileTableModel tableModel;
     private JComboBox<FileAction> actionComboBox;
     private List<FileAction> availableActions;
+    private JTextArea consoleArea;
 
     public Main() {
         setTitle("File Selector");
@@ -110,9 +112,25 @@ public class Main extends JFrame {
         fileTable.getColumnModel().getColumn(3).setCellRenderer(renderer);
         fileTable.getColumnModel().getColumn(4).setCellRenderer(renderer);
 
-        // Add scroll pane
-        JScrollPane scrollPane = new JScrollPane(fileTable);
-        add(scrollPane, BorderLayout.CENTER);
+        // Add scroll pane for table
+        JScrollPane tableScrollPane = new JScrollPane(fileTable);
+
+        // Create console area
+        consoleArea = new JTextArea();
+        consoleArea.setEditable(false);
+        consoleArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        consoleArea.setBackground(new Color(240, 240, 240)); // Light gray background
+        consoleArea.setForeground(new Color(60, 60, 60)); // Dark gray text
+        consoleArea.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        JScrollPane consoleScrollPane = new JScrollPane(consoleArea);
+        consoleScrollPane.setPreferredSize(new Dimension(0, 150));
+
+        // Create split pane with table on top and console on bottom
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, consoleScrollPane);
+        splitPane.setResizeWeight(0.7); // Give 70% space to table, 30% to console
+        splitPane.setOneTouchExpandable(true);
+
+        add(splitPane, BorderLayout.CENTER);
     }
 
     private void openFolder() {
@@ -166,29 +184,64 @@ public class Main extends JFrame {
             return;
         }
 
+        // Clear console before processing
+        consoleArea.setText("");
+
+        // Create logger for plugins
+        ActionLogger logger = new ConsoleLogger();
+
         // Perform action on each selected file using the plugin
-        System.out.println("Processing " + selectedFiles.size() + " file(s) with action: " + selectedAction.getActionName());
+        logger.info("Processing " + selectedFiles.size() + " file(s) with action: " + selectedAction.getActionName());
         int successCount = 0;
         int errorCount = 0;
 
         for (File file : selectedFiles) {
             try {
-                selectedAction.execute(file);
+                selectedAction.execute(file, logger);
                 successCount++;
             } catch (Exception e) {
                 errorCount++;
-                System.err.println("Error processing " + file.getName() + ": " + e.getMessage());
-                e.printStackTrace();
+                logger.error("Error processing " + file.getName() + ": " + e.getMessage(), e);
             }
         }
 
-        System.out.println("Processing complete. Success: " + successCount + ", Errors: " + errorCount);
+        logger.info("Processing complete. Success: " + successCount + ", Errors: " + errorCount);
 
         if (errorCount > 0) {
             JOptionPane.showMessageDialog(this,
                 "Processing completed with errors.\nSuccess: " + successCount + "\nErrors: " + errorCount,
                 "Processing Result",
                 JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    // Logger implementation that writes to the console area
+    private class ConsoleLogger implements ActionLogger {
+        @Override
+        public void info(String message) {
+            SwingUtilities.invokeLater(() -> {
+                consoleArea.append("[INFO] " + message + "\n");
+                consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
+            });
+        }
+
+        @Override
+        public void error(String message) {
+            SwingUtilities.invokeLater(() -> {
+                consoleArea.append("[ERROR] " + message + "\n");
+                consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
+            });
+        }
+
+        @Override
+        public void error(String message, Throwable throwable) {
+            SwingUtilities.invokeLater(() -> {
+                consoleArea.append("[ERROR] " + message + "\n");
+                if (throwable != null) {
+                    consoleArea.append("  Exception: " + throwable.getClass().getName() + ": " + throwable.getMessage() + "\n");
+                }
+                consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
+            });
         }
     }
 

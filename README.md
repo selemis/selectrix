@@ -9,6 +9,7 @@ A Java Swing application that allows users to browse folders, select multiple fi
 - **Checkbox Selection**: Select multiple files/folders for batch processing
 - **Visual Feedback**: Selected items are highlighted in light blue
 - **Bulk Operations**: Select All / Deselect All buttons for quick selection
+- **Integrated Console**: Real-time output display in a terminal-style console at the bottom of the window
 - **Pluggable Actions**: Extensible architecture allows adding custom actions via plugins
 
 ## Built-in Actions
@@ -39,15 +40,20 @@ The application comes with the following built-in actions:
    - Select an action from the "Action" dropdown
    - Click "Process Files" to execute the action on all selected files
 
+5. **View output**
+   - All processing output appears in the console at the bottom of the window
+   - The console auto-scrolls to show the latest messages
+   - You can resize the console by dragging the divider between the table and console
+
 ## Plugin System
 
 ### Architecture Overview
 
 The application uses a plugin-based architecture that allows you to extend functionality by adding custom actions without modifying the core application code.
 
-### Plugin Interface
+### Plugin Interfaces
 
-All plugins must implement the `FileAction` interface:
+All plugins must implement the `FileAction` interface and use the `ActionLogger` for output:
 
 ```java
 package org.example.plugin;
@@ -62,13 +68,36 @@ public interface FileAction {
 
     /**
      * Executes the action on the given file.
+     * @param file The file to process
+     * @param logger Logger for outputting messages to the GUI console
      */
-    void execute(File file) throws Exception;
+    void execute(File file, ActionLogger logger) throws Exception;
 
     /**
      * Returns a description of what this action does.
      */
     String getDescription();
+}
+```
+
+```java
+package org.example.plugin;
+
+public interface ActionLogger {
+    /**
+     * Logs an informational message to the GUI console.
+     */
+    void info(String message);
+
+    /**
+     * Logs an error message to the GUI console.
+     */
+    void error(String message);
+
+    /**
+     * Logs an error message with exception details to the GUI console.
+     */
+    void error(String message, Throwable throwable);
 }
 ```
 
@@ -80,9 +109,9 @@ Create a separate Java project for your plugin.
 
 #### Step 2: Add FileSelector as a Dependency
 
-You need access to the `FileAction` interface. Either:
+You need access to the `FileAction` and `ActionLogger` interfaces. Either:
 - Add the FileSelector project as a dependency
-- Copy the `FileAction.java` interface to your plugin project
+- Copy both `FileAction.java` and `ActionLogger.java` interfaces to your plugin project
 
 #### Step 3: Implement the FileAction Interface
 
@@ -91,6 +120,7 @@ Example - Creating an "Unzip Files" plugin:
 ```java
 package com.mycompany.plugins;
 
+import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 import java.io.File;
 import java.util.zip.ZipFile;
@@ -104,11 +134,20 @@ public class UnzipAction implements FileAction {
     }
 
     @Override
-    public void execute(File file) throws Exception {
+    public void execute(File file, ActionLogger logger) throws Exception {
         if (file.getName().endsWith(".zip")) {
+            logger.info("Unzipping: " + file.getName());
+
             // Your unzip logic here
-            System.out.println("Unzipping: " + file.getName());
-            // ... actual unzip code
+            try {
+                // ... actual unzip code
+                logger.info("  Successfully extracted: " + file.getName());
+            } catch (Exception e) {
+                logger.error("  Failed to extract: " + file.getName(), e);
+                throw e;
+            }
+        } else {
+            logger.info("  Skipping non-ZIP file: " + file.getName());
         }
     }
 
@@ -118,6 +157,8 @@ public class UnzipAction implements FileAction {
     }
 }
 ```
+
+**Important**: Always use the `logger` parameter instead of `System.out.println()` or `System.err.println()`. This ensures your output appears in the GUI console where users can see it.
 
 #### Step 4: Create ServiceLoader Configuration
 
@@ -290,6 +331,12 @@ And maintain a registry/config file of all plugin class names.
    - All plugins (built-in + external) are added to the Action dropdown
    - User can select and execute any loaded plugin
 
+7. **Execute Plugin**
+   - When user clicks "Process Files", the console is cleared
+   - A `ConsoleLogger` instance is created
+   - The plugin's `execute()` method is called for each selected file, passing the logger
+   - All logger output appears in real-time in the GUI console
+
 ## Project Structure
 
 ```
@@ -298,9 +345,10 @@ FileSelector/
 │   ├── main/
 │   │   └── java/
 │   │       └── org/example/
-│   │           ├── Main.java                    # Main application window
+│   │           ├── Main.java                    # Main application window with GUI console
 │   │           └── plugin/
 │   │               ├── FileAction.java          # Plugin interface
+│   │               ├── ActionLogger.java        # Logger interface for plugins
 │   │               ├── PluginLoader.java        # Plugin loading logic
 │   │               └── impl/                    # Built-in plugins
 │   │                   ├── PrintFilenameAction.java
@@ -336,6 +384,25 @@ FileSelector/
 
 The project uses Spock Framework for testing. Tests are located in `src/test/groovy/`.
 
+## GUI Console
+
+The application includes an integrated console at the bottom of the window that displays real-time output from plugins.
+
+### Console Features
+
+- **Terminal-style Display**: Black background with green text for easy readability
+- **Auto-scroll**: Automatically scrolls to show the latest messages
+- **Resizable**: Drag the divider between the table and console to adjust sizes
+- **Message Levels**: Displays `[INFO]` and `[ERROR]` prefixes for different message types
+- **Exception Details**: Shows exception class and message for errors
+- **Clear on Run**: Console is automatically cleared before each processing run
+
+### Console Implementation
+
+The console is implemented using a `JTextArea` in a `JSplitPane`. The `ConsoleLogger` class implements the `ActionLogger` interface and writes messages to this text area using `SwingUtilities.invokeLater()` to ensure thread-safe GUI updates.
+
+All plugins receive an `ActionLogger` instance and should use it instead of `System.out` or `System.err` to ensure output is visible to users in the GUI.
+
 ## Future Enhancements
 
 - Implement Copy Files functionality
@@ -346,6 +413,8 @@ The project uses Spock Framework for testing. Tests are located in `src/test/gro
 - Add ability to export/import selection lists
 - Add file filtering capabilities
 - Add recursive folder processing
+- Add console export/save functionality
+- Add different console color schemes
 
 ## License
 

@@ -1,5 +1,6 @@
 package org.example.plugin.impl;
 
+import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 
 import java.io.File;
@@ -16,9 +17,9 @@ public class DeleteFileAction implements FileAction {
     }
 
     @Override
-    public void execute(File file) throws Exception {
+    public void execute(File file, ActionLogger logger) throws Exception {
         // TODO: Implement delete functionality with confirmation dialog
-        System.out.println("  - Delete: " + file.getName() + " (not yet implemented)");
+        logger.info("  - Delete: " + file.getName() + " (not yet implemented)");
     }
 
     @Override

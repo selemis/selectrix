@@ -1,5 +1,6 @@
 package org.example.plugin.impl;
 
+import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 
 import java.io.File;
@@ -15,8 +16,8 @@ public class PrintFilenameAction implements FileAction {
     }
 
     @Override
-    public void execute(File file) throws Exception {
-        System.out.println("  - " + file.getName());
+    public void execute(File file, ActionLogger logger) throws Exception {
+        logger.info("  - " + file.getName());
     }
 
     @Override
