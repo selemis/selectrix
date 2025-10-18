@@ -49,8 +49,12 @@ public class Main extends JFrame {
         JButton deselectAllButton = new JButton("Deselect All");
         deselectAllButton.addActionListener(e -> deselectAll());
 
+        JButton processFilesButton = new JButton("Process Files");
+        processFilesButton.addActionListener(e -> processFiles());
+
         buttonPanel.add(selectAllButton);
         buttonPanel.add(deselectAllButton);
+        buttonPanel.add(processFilesButton);
 
         add(buttonPanel, BorderLayout.NORTH);
 
@@ -111,6 +115,31 @@ public class Main extends JFrame {
 
     private void deselectAll() {
         tableModel.setAllSelected(false);
+    }
+
+    private void processFiles() {
+        List<File> selectedFiles = tableModel.getSelectedFiles();
+
+        if (selectedFiles.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "No files selected!",
+                "Warning",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Perform action on each selected file
+        System.out.println("Processing " + selectedFiles.size() + " file(s):");
+        for (File file : selectedFiles) {
+            performAction(file);
+        }
+        System.out.println("Processing complete.");
+    }
+
+    private void performAction(File file) {
+        // This is where the action is performed on each file
+        // For now, just print the filename
+        System.out.println("  - " + file.getName());
     }
 
     // Custom table model for file data
@@ -196,6 +225,16 @@ public class Main extends JFrame {
                 row.setSelected(selected);
             }
             fireTableDataChanged();
+        }
+
+        public List<File> getSelectedFiles() {
+            List<File> selectedFiles = new ArrayList<>();
+            for (FileRow row : rows) {
+                if (row.isSelected()) {
+                    selectedFiles.add(row.getFile());
+                }
+            }
+            return selectedFiles;
         }
 
         private String formatFileSize(long size) {
