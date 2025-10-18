@@ -38,6 +38,22 @@ public class Main extends JFrame {
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
+        // Create button panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+
+        // Create buttons
+        JButton selectAllButton = new JButton("Select All");
+        selectAllButton.addActionListener(e -> selectAll());
+
+        JButton deselectAllButton = new JButton("Deselect All");
+        deselectAllButton.addActionListener(e -> deselectAll());
+
+        buttonPanel.add(selectAllButton);
+        buttonPanel.add(deselectAllButton);
+
+        add(buttonPanel, BorderLayout.NORTH);
+
         // Create table model and table
         tableModel = new FileTableModel();
         fileTable = new JTable(tableModel);
@@ -87,6 +103,14 @@ public class Main extends JFrame {
                 tableModel.addFile(file);
             }
         }
+    }
+
+    private void selectAll() {
+        tableModel.setAllSelected(true);
+    }
+
+    private void deselectAll() {
+        tableModel.setAllSelected(false);
     }
 
     // Custom table model for file data
@@ -164,6 +188,13 @@ public class Main extends JFrame {
 
         public void clear() {
             rows.clear();
+            fireTableDataChanged();
+        }
+
+        public void setAllSelected(boolean selected) {
+            for (FileRow row : rows) {
+                row.setSelected(selected);
+            }
             fireTableDataChanged();
         }
 
