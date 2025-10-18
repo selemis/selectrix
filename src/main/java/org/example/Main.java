@@ -2,6 +2,7 @@ package org.example;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -52,6 +53,13 @@ public class Main extends JFrame {
         fileTable.getColumnModel().getColumn(2).setPreferredWidth(300); // Name
         fileTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Size
         fileTable.getColumnModel().getColumn(4).setPreferredWidth(150); // Date
+
+        // Add custom cell renderer for highlighting checked rows
+        CheckedRowRenderer renderer = new CheckedRowRenderer();
+        fileTable.getColumnModel().getColumn(1).setCellRenderer(renderer);
+        fileTable.getColumnModel().getColumn(2).setCellRenderer(renderer);
+        fileTable.getColumnModel().getColumn(3).setCellRenderer(renderer);
+        fileTable.getColumnModel().getColumn(4).setCellRenderer(renderer);
 
         // Add scroll pane
         JScrollPane scrollPane = new JScrollPane(fileTable);
@@ -192,6 +200,28 @@ public class Main extends JFrame {
 
         public void setSelected(boolean selected) {
             this.selected = selected;
+        }
+    }
+
+    // Custom cell renderer to highlight checked rows
+    private class CheckedRowRenderer extends DefaultTableCellRenderer {
+        private final Color HIGHLIGHT_COLOR = new Color(173, 216, 230); // Light blue
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus,
+                                                       int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            // Check if the row's checkbox is checked
+            Boolean checked = (Boolean) tableModel.getValueAt(row, 0);
+            if (checked != null && checked) {
+                c.setBackground(HIGHLIGHT_COLOR);
+            } else if (!isSelected) {
+                c.setBackground(table.getBackground());
+            }
+
+            return c;
         }
     }
 
