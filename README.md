@@ -438,6 +438,12 @@ FileSelector/
 # Run tests
 ./gradlew test
 
+# Run all quality checks
+./gradlew qualityCheck
+
+# Start SonarQube server (Docker required)
+./start-sonarqube.sh
+
 # Create distribution ZIP (for sharing with others)
 ./gradlew distZip
 
@@ -648,6 +654,229 @@ SpotBugs detects issues in the following categories:
 - **URF_UNREAD_FIELD**: Field is never read after being written
 - **DM_DEFAULT_ENCODING**: Reliance on default character encoding
 - **EI_EXPOSE_REP**: May expose internal representation
+
+### Comprehensive Quality Dashboard (SonarQube)
+
+SonarQube provides a centralized dashboard that aggregates all quality metrics from JaCoCo, PMD, SpotBugs, and more.
+
+**SonarQube Options:**
+
+1. **Local SonarQube Server with Docker** (Recommended)
+   - Self-hosted, full control
+   - Free for all projects (no limitations)
+   - Easy setup with Docker
+   - Professional-grade dashboard
+
+2. **SonarCloud** (Alternative for Open Source)
+   - Free for public repositories only
+   - Cloud-hosted, no setup required
+   - Visit [sonarcloud.io](https://sonarcloud.io)
+
+**Setting Up SonarQube with Docker:**
+
+**Prerequisites:**
+- Docker installed on your machine
+  - **Windows**: [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)
+  - **macOS**: [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)
+  - **Linux**: `sudo apt-get install docker.io` (Ubuntu/Debian) or see [Docker docs](https://docs.docker.com/engine/install/)
+
+**Quick Start (Recommended):**
+
+Use the provided script to start SonarQube automatically:
+
+```bash
+# Make the script executable (first time only)
+chmod +x start-sonarqube.sh
+
+# Start SonarQube
+./start-sonarqube.sh
+```
+
+The script will:
+- Start SonarQube container if not exists
+- Wait for SonarQube to be ready
+- Display the URL and next steps
+
+**Manual Setup:**
+
+**Step 1: Start SonarQube Server**
+
+```bash
+# Pull and run SonarQube container
+docker run -d --name sonarqube \
+  -p 9000:9000 \
+  -v sonarqube_data:/opt/sonarqube/data \
+  -v sonarqube_extensions:/opt/sonarqube/extensions \
+  -v sonarqube_logs:/opt/sonarqube/logs \
+  sonarqube:latest
+
+# Wait about 2 minutes for SonarQube to start
+# Check if it's ready
+docker logs -f sonarqube
+# Wait for message: "SonarQube is operational"
+# Press Ctrl+C to stop following logs
+```
+
+**Step 2: Access SonarQube Web Interface**
+
+1. Open your browser and go to: [http://localhost:9000](http://localhost:9000)
+2. Login with default credentials:
+   - **Username**: `admin`
+   - **Password**: `admin`
+3. You'll be prompted to change the password - choose a new password
+
+**Step 3: Create a Project**
+
+1. Click "Create Project" → "Manually"
+2. Enter project details:
+   - **Project display name**: `File Selector`
+   - **Project key**: `fileselector`
+   - Click "Set Up"
+3. Choose "Locally"
+4. Generate a token:
+   - **Token name**: `fileselector-token`
+   - Click "Generate"
+   - **IMPORTANT**: Copy the token immediately (you won't see it again!)
+
+**Step 4: Run Analysis**
+
+```bash
+# First, generate all quality reports
+./gradlew qualityCheck
+
+# Upload to SonarQube (replace YOUR_TOKEN with the token from Step 3)
+./gradlew sonar \
+  -Dsonar.host.url=http://localhost:9000 \
+  -Dsonar.token=YOUR_TOKEN
+```
+
+**Step 5: View Results**
+
+1. Go to [http://localhost:9000](http://localhost:9000)
+2. Click on "Projects" → "File Selector"
+3. Explore the dashboard showing:
+   - 🐛 Bugs and vulnerabilities
+   - 💩 Code smells
+   - 📊 Code coverage
+   - 🔄 Code duplications
+   - ⏱️ Technical debt
+
+**Managing SonarQube Container:**
+
+```bash
+# Stop SonarQube
+docker stop sonarqube
+
+# Start SonarQube (after stopping)
+docker start sonarqube
+
+# Remove SonarQube (if you want to start fresh)
+docker rm -f sonarqube
+# Note: This will delete all data unless you used volumes
+
+# View logs
+docker logs sonarqube
+```
+
+**Troubleshooting Docker Setup:**
+
+**Issue: "Cannot connect to Docker daemon"**
+- **Windows/Mac**: Make sure Docker Desktop is running
+- **Linux**: Start Docker service: `sudo systemctl start docker`
+
+**Issue: Port 9000 already in use**
+```bash
+# Use a different port (e.g., 9001)
+docker run -d --name sonarqube \
+  -p 9001:9000 \
+  sonarqube:latest
+# Then access at http://localhost:9001
+```
+
+**Issue: SonarQube won't start (container keeps restarting)**
+```bash
+# Check system requirements
+# SonarQube requires:
+# - At least 2GB RAM allocated to Docker
+# - vm.max_map_count >= 262144 (Linux only)
+
+# For Linux, set vm.max_map_count:
+sudo sysctl -w vm.max_map_count=262144
+
+# For Docker Desktop (Windows/Mac):
+# Increase memory in Docker Desktop Settings → Resources → Memory to at least 4GB
+```
+
+**Issue: "Elasticsearch: max virtual memory areas too low"**
+```bash
+# Linux only - increase max_map_count permanently
+echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+**What SonarQube Analyzes:**
+
+- **Code Coverage**: From JaCoCo reports
+- **Code Smells**: From PMD and SonarQube's own analyzers
+- **Bugs**: From SpotBugs and SonarQube
+- **Security Vulnerabilities**: Security hotspots and vulnerabilities
+- **Duplications**: Duplicate code blocks
+- **Complexity**: Cyclomatic complexity metrics
+- **Maintainability**: Technical debt and maintainability ratings
+
+**SonarQube Quality Gate:**
+
+SonarQube provides a "Quality Gate" that determines if your code meets minimum standards:
+- Coverage on new code > 80%
+- Duplicated lines on new code < 3%
+- Maintainability rating = A
+- Reliability rating = A
+- Security rating = A
+
+**Viewing Results:**
+
+After running the analysis, view the dashboard at:
+- **SonarCloud**: `https://sonarcloud.io/dashboard?id=fileselector`
+- **Local Server**: `http://localhost:9000/dashboard?id=fileselector`
+
+**Continuous Integration:**
+
+Add to your CI/CD pipeline (GitHub Actions, Jenkins, GitLab CI):
+
+```yaml
+# Example GitHub Actions workflow
+- name: Build and analyze
+  run: ./gradlew build sonar
+  env:
+    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+```
+
+**Project Configuration:**
+
+The SonarQube configuration is in `build.gradle`:
+- Project key: `fileselector`
+- Automatically imports JaCoCo, PMD, and SpotBugs reports
+- Excludes `Main.java` from analysis (GUI main class)
+- Configured for Java 17
+
+## Quality Metrics Summary
+
+The project now has comprehensive quality tooling:
+
+| Tool | Purpose | Command | Report Location |
+|------|---------|---------|-----------------|
+| **JaCoCo** | Code Coverage | `./gradlew testWithCoverage` | `build/reports/jacoco/test/html/index.html` |
+| **PMD** | Static Analysis | `./gradlew pmdCheck` | `build/reports/pmd/main.html` |
+| **SpotBugs** | Bug Detection | `./gradlew spotbugsCheck` | `build/reports/spotbugs/main.html` |
+| **SonarQube** | Quality Dashboard | `./gradlew sonar` | SonarQube web UI |
+| **All** | All Checks | `./gradlew qualityCheck` | Multiple reports |
+
+**Recommended Workflow:**
+
+1. **During Development**: Run `./gradlew testWithCoverage` frequently
+2. **Before Committing**: Run `./gradlew qualityCheck` to check all metrics
+3. **In CI/CD**: Run `./gradlew qualityCheck sonar` to upload to SonarQube
+4. **Weekly**: Review SonarQube dashboard and address high-priority issues
 
 ## GUI Console
 

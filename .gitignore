@@ -58,3 +58,5 @@ api/
 
 # External plugins (loaded at runtime)
 plugins/
+
+token

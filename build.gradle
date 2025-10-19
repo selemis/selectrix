@@ -6,6 +6,7 @@ plugins {
     id 'jacoco'
     id 'pmd'
     id 'com.github.spotbugs' version '6.0.7'
+    id 'org.sonarqube' version '5.1.0.4882'
 }
 
 group = 'org.example'
@@ -184,6 +185,41 @@ tasks.register('spotbugsCheck') {
     }
 }
 
+// SonarQube Configuration
+sonar {
+    properties {
+        property 'sonar.projectKey', 'fileselector'
+        property 'sonar.projectName', 'File Selector'
+        property 'sonar.projectVersion', version
+        property 'sonar.sourceEncoding', 'UTF-8'
+
+        // Source directories
+        property 'sonar.sources', 'src/main/java'
+        property 'sonar.tests', 'src/test/groovy'
+
+        // Coverage reports
+        property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+
+        // PMD reports
+        property 'sonar.java.pmd.reportPaths', "${buildDir}/reports/pmd/main.xml"
+
+        // SpotBugs reports
+        property 'sonar.java.spotbugs.reportPaths', "${buildDir}/reports/spotbugs/main.xml"
+
+        // Exclusions (optional - customize as needed)
+        property 'sonar.exclusions', '**/Main.java'  // Exclude GUI main class from analysis
+
+        // Java version
+        property 'sonar.java.source', '17'
+        property 'sonar.java.target', '17'
+    }
+}
+
+// Make sonarqube task depend on all quality checks
+tasks.named('sonar') {
+    dependsOn test, jacocoTestReport, pmdMain, spotbugsMain
+}
+
 // Task to run all quality checks
 tasks.register('qualityCheck') {
     dependsOn test, jacocoTestReport, pmdMain, pmdTest, spotbugsMain, spotbugsTest
@@ -198,6 +234,10 @@ tasks.register('qualityCheck') {
         println "Coverage Report:  ${project.buildDir}/reports/jacoco/test/html/index.html"
         println "PMD Report:       ${project.buildDir}/reports/pmd/main.html"
         println "SpotBugs Report:  ${project.buildDir}/reports/spotbugs/main.html"
+        println "=========================================="
+        println ""
+        println "To upload to SonarQube, run:"
+        println "  ./gradlew sonar -Dsonar.host.url=<your-sonarqube-url> -Dsonar.token=<your-token>"
         println "=========================================="
     }
 }
