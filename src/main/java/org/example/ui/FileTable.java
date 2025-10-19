@@ -5,6 +5,8 @@ import org.example.model.FileTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -66,12 +68,79 @@ public class FileTable extends JTable {
     }
 
     private void setColumnWidths() {
-        getColumnModel().getColumn(0).setPreferredWidth(50);  // Checkbox
-        getColumnModel().getColumn(0).setMaxWidth(50);
-        getColumnModel().getColumn(1).setPreferredWidth(80);  // Type
-        getColumnModel().getColumn(2).setPreferredWidth(300); // Name
-        getColumnModel().getColumn(3).setPreferredWidth(100); // Size
-        getColumnModel().getColumn(4).setPreferredWidth(150); // Date
+        // Set initial auto-resize mode
+        setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+
+        // Set minimum widths for each column
+        getColumnModel().getColumn(0).setMinWidth(60);  // Checkbox (enough for "Select" header)
+        getColumnModel().getColumn(0).setMaxWidth(80);  // Allow some flexibility
+        getColumnModel().getColumn(1).setMinWidth(80);  // Type
+        getColumnModel().getColumn(2).setMinWidth(150); // Name
+        getColumnModel().getColumn(3).setMinWidth(80);  // Size
+        getColumnModel().getColumn(4).setMinWidth(140); // Date
+    }
+
+    /**
+     * Auto-resize all columns to fit their content and headers.
+     * This should be called after data is loaded.
+     */
+    public void autoResizeColumns() {
+        for (int column = 0; column < getColumnCount(); column++) {
+            TableColumn tableColumn = getColumnModel().getColumn(column);
+            int preferredWidth = calculateOptimalColumnWidth(column);
+            tableColumn.setPreferredWidth(preferredWidth);
+        }
+    }
+
+    /**
+     * Calculate the optimal width for a column based on header and content.
+     */
+    private int calculateOptimalColumnWidth(int columnIndex) {
+        int maxWidth = 0;
+        int margin = 10; // Extra margin for padding
+
+        // Check header width
+        TableColumn column = getColumnModel().getColumn(columnIndex);
+        TableCellRenderer headerRenderer = column.getHeaderRenderer();
+        if (headerRenderer == null) {
+            headerRenderer = getTableHeader().getDefaultRenderer();
+        }
+
+        Object headerValue = column.getHeaderValue();
+        Component headerComp = headerRenderer.getTableCellRendererComponent(
+                this, headerValue, false, false, 0, columnIndex);
+        maxWidth = headerComp.getPreferredSize().width;
+
+        // Check content width (sample first 100 rows for performance)
+        int rowsToCheck = Math.min(100, getRowCount());
+        for (int row = 0; row < rowsToCheck; row++) {
+            TableCellRenderer cellRenderer = getCellRenderer(row, columnIndex);
+            Component comp = prepareRenderer(cellRenderer, row, columnIndex);
+            maxWidth = Math.max(maxWidth, comp.getPreferredSize().width);
+        }
+
+        // Add margin and respect min/max constraints
+        maxWidth += margin;
+
+        // Apply column-specific constraints
+        if (columnIndex == 0) {
+            // Checkbox column - fit header and checkbox, with min/max
+            return Math.min(Math.max(maxWidth, 60), 80);
+        } else if (columnIndex == 1) {
+            // Type column - limited width
+            return Math.min(maxWidth, 100);
+        } else if (columnIndex == 2) {
+            // Name column - allow to grow but have max
+            return Math.min(Math.max(maxWidth, 200), 600);
+        } else if (columnIndex == 3) {
+            // Size column - limited width
+            return Math.min(maxWidth, 120);
+        } else if (columnIndex == 4) {
+            // Date column - fixed reasonable width
+            return Math.max(maxWidth, 160);
+        }
+
+        return maxWidth;
     }
 
     // Add custom cell renderer for highlighting checked rows

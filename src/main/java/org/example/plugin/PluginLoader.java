@@ -11,7 +11,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
-import java.util.jar.JarFile;
 
 /**
  * Loads FileAction plugins from the built-in implementations and from JAR files

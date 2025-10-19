@@ -209,6 +209,9 @@ public class Main extends JFrame {
                 tableModel.addFile(file);
             }
         }
+
+        // Auto-resize columns to fit content after loading files
+        SwingUtilities.invokeLater(() -> fileTable.autoResizeColumns());
     }
 
     private void refreshUI() {
