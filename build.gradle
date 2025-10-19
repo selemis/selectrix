@@ -4,6 +4,7 @@ plugins {
     id 'maven-publish'
     id 'application'
     id 'jacoco'
+    id 'pmd'
 }
 
 group = 'org.example'
@@ -82,6 +83,65 @@ tasks.register('testWithCoverage') {
         println "=========================================="
         println "HTML Report: ${project.buildDir}/reports/jacoco/test/html/index.html"
         println "XML Report:  ${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        println "=========================================="
+    }
+}
+
+// PMD Configuration
+pmd {
+    toolVersion = '7.0.0'
+    consoleOutput = true
+    ignoreFailures = true
+    ruleSets = [] // Clear default rulesets
+    ruleSetFiles = files("${rootDir}/config/pmd/ruleset.xml")
+}
+
+pmdMain {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+pmdTest {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// Custom task to run PMD and show report location
+tasks.register('pmdCheck') {
+    dependsOn pmdMain, pmdTest
+    description = 'Runs PMD static code analysis'
+    group = 'verification'
+
+    doLast {
+        println ""
+        println "=========================================="
+        println "PMD Analysis Complete!"
+        println "=========================================="
+        println "Main HTML Report: ${project.buildDir}/reports/pmd/main.html"
+        println "Main XML Report:  ${project.buildDir}/reports/pmd/main.xml"
+        println "Test HTML Report: ${project.buildDir}/reports/pmd/test.html"
+        println "Test XML Report:  ${project.buildDir}/reports/pmd/test.xml"
+        println "=========================================="
+    }
+}
+
+// Task to run all quality checks
+tasks.register('qualityCheck') {
+    dependsOn test, jacocoTestReport, pmdMain, pmdTest
+    description = 'Runs all quality checks (tests, coverage, PMD)'
+    group = 'verification'
+
+    doLast {
+        println ""
+        println "=========================================="
+        println "All Quality Checks Complete!"
+        println "=========================================="
+        println "Coverage Report: ${project.buildDir}/reports/jacoco/test/html/index.html"
+        println "PMD Report:      ${project.buildDir}/reports/pmd/main.html"
         println "=========================================="
     }
 }

@@ -508,6 +508,66 @@ The project uses JaCoCo for code coverage analysis. After running tests, coverag
 - UI components (especially Swing classes) are typically harder to test
 - Aim for meaningful tests rather than just high coverage numbers
 
+### Static Code Analysis (PMD)
+
+The project uses PMD for static code analysis to detect potential bugs, code smells, and best practice violations.
+
+**Running PMD:**
+
+```bash
+# Run PMD analysis
+./gradlew pmdCheck
+
+# Run all quality checks (tests, coverage, and PMD)
+./gradlew qualityCheck
+```
+
+**Viewing PMD Reports:**
+
+- **HTML Report**: Open `build/reports/pmd/main.html` in your browser
+  - Shows all violations grouped by file
+  - Includes rule descriptions and line numbers
+  - Color-coded by priority (high, medium, low)
+
+- **XML Report**: `build/reports/pmd/main.xml`
+  - Machine-readable format for CI/CD integration
+  - Can be integrated with Jenkins, SonarQube, etc.
+
+**PMD Rule Categories:**
+
+The project uses a custom ruleset (`config/pmd/ruleset.xml`) that checks for:
+
+- **Best Practices**: Common programming mistakes and anti-patterns
+- **Code Style**: Coding standards and conventions
+- **Design**: Object-oriented design principles
+- **Error Prone**: Code that is likely to cause bugs
+- **Performance**: Performance issues and inefficiencies
+- **Security**: Security vulnerabilities
+- **Multithreading**: Concurrency and thread safety issues
+
+**Understanding PMD Violations:**
+
+PMD reports violations with:
+- **File and line number**: Where the issue occurs
+- **Rule name**: Which rule was violated
+- **Description**: Explanation of the problem
+- **Priority**: 1 (High) to 5 (Low)
+
+**Common Violations and How to Fix:**
+
+- **SystemPrintln**: Replace `System.out.println()` with proper logging
+- **AvoidCatchingGenericException**: Catch specific exceptions instead of `Exception`
+- **ControlStatementBraces**: Add braces to if/else/for/while statements
+- **UseUtilityClass**: Make utility classes final with private constructor
+
+**Customizing Rules:**
+
+Edit `config/pmd/ruleset.xml` to:
+- Enable/disable specific rules
+- Adjust rule priorities
+- Configure rule parameters
+- Exclude rules that don't fit your project
+
 ## GUI Console
 
 The application includes an integrated console at the bottom of the window that displays real-time output from plugins.
