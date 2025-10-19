@@ -24,10 +24,14 @@ public class PropertiesEditorDialog extends JDialog {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
 
+        // Get UI font for all components
+        Font uiFont = config.getUIFont();
+
         // Create info panel
         JPanel infoPanel = new JPanel(new BorderLayout());
         JLabel infoLabel = new JLabel("<html><b>Edit UI Configuration</b><br/>" +
                 "Properties file location: " + config.getPropertiesFile().getAbsolutePath() + "</html>");
+        infoLabel.setFont(uiFont);
         infoLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         infoPanel.add(infoLabel, BorderLayout.NORTH);
         add(infoPanel, BorderLayout.NORTH);
@@ -37,11 +41,12 @@ public class PropertiesEditorDialog extends JDialog {
         editorPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 
         JLabel editorLabel = new JLabel("Edit properties below:");
+        editorLabel.setFont(uiFont);
         editorPanel.add(editorLabel, BorderLayout.NORTH);
 
         // Create text area for editing properties
         JTextArea textArea = new JTextArea();
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setFont(config.getConsoleFont()); // Use console font for monospaced text
         textArea.setTabSize(4);
 
         // Load current properties into text area
@@ -89,6 +94,7 @@ public class PropertiesEditorDialog extends JDialog {
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 
         JButton saveButton = new JButton("Save");
+        saveButton.setFont(uiFont);
         saveButton.addActionListener(e -> {
             try {
                 // Save the text content to the properties file
@@ -114,9 +120,11 @@ public class PropertiesEditorDialog extends JDialog {
         });
 
         JButton cancelButton = new JButton("Cancel");
+        cancelButton.setFont(uiFont);
         cancelButton.addActionListener(e -> dispose());
 
         JButton openFileButton = new JButton("Open in External Editor");
+        openFileButton.setFont(uiFont);
         openFileButton.addActionListener(e -> {
             try {
                 Desktop.getDesktop().open(config.getPropertiesFile());

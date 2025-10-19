@@ -182,11 +182,38 @@ public class Main extends JFrame {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
+        // Apply UI font to file chooser
+        applyFontToFileChooser(fileChooser, config.getUIFont());
+
         int result = fileChooser.showOpenDialog(this);
 
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFolder = fileChooser.getSelectedFile();
             loadFolderContents(selectedFolder);
+        }
+    }
+
+    /**
+     * Recursively apply font to all components in the file chooser.
+     */
+    private void applyFontToFileChooser(JFileChooser fileChooser, Font font) {
+        // Set font on the file chooser itself
+        fileChooser.setFont(font);
+
+        // Recursively apply to all child components
+        applyFontToComponent(fileChooser, font);
+    }
+
+    /**
+     * Recursively apply font to a component and all its children.
+     */
+    private void applyFontToComponent(Component component, Font font) {
+        component.setFont(font);
+
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyFontToComponent(child, font);
+            }
         }
     }
 
