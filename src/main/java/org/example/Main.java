@@ -1,8 +1,10 @@
 package org.example;
 
+import org.example.config.UIConfig;
 import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 import org.example.plugin.PluginLoader;
+import org.example.ui.PropertiesEditorDialog;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -21,10 +23,19 @@ public class Main extends JFrame {
     private final List<FileAction> availableActions;
     private JTextArea consoleArea;
     private JButton processFilesButton;
+    private UIConfig config;
+    private JSplitPane splitPane;
+    private JMenuBar menuBar;
+    private JButton selectAllButton;
+    private JButton deselectAllButton;
+    private List<JLabel> labels;
 
     public Main() {
-        setTitle("File Selector");
-        setSize(1000, 600);
+        // Load UI configuration
+        config = UIConfig.getInstance();
+
+        setTitle(config.getWindowTitle());
+        setSize(config.getWindowWidth(), config.getWindowHeight());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -36,18 +47,37 @@ public class Main extends JFrame {
     }
 
     private void initComponents() {
+        labels = new ArrayList<>();
+
         // Create menu bar
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
+        Font uiFont = config.getUIFont();
+        menuBar.setFont(uiFont);
 
         // Create File menu
         JMenu fileMenu = new JMenu("File");
+        fileMenu.setFont(uiFont);
 
         // Create Open Folder menu item
         JMenuItem openFolderItem = new JMenuItem("Open Folder");
+        openFolderItem.setFont(uiFont);
         openFolderItem.addActionListener(e -> openFolder());
 
         fileMenu.add(openFolderItem);
         menuBar.add(fileMenu);
+
+        // Create Settings menu
+        JMenu settingsMenu = new JMenu("Settings");
+        settingsMenu.setFont(uiFont);
+
+        // Create UI Properties menu item
+        JMenuItem uiPropertiesItem = new JMenuItem("UI Properties...");
+        uiPropertiesItem.setFont(uiFont);
+        uiPropertiesItem.addActionListener(e -> openPropertiesEditor());
+
+        settingsMenu.add(uiPropertiesItem);
+        menuBar.add(settingsMenu);
+
         setJMenuBar(menuBar);
 
         // Create button panel
@@ -55,17 +85,21 @@ public class Main extends JFrame {
         buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
 
         // Create buttons
-        JButton selectAllButton = new JButton("Select All");
+        selectAllButton = new JButton("Select All");
+        selectAllButton.setFont(uiFont);
         selectAllButton.addActionListener(e -> selectAll());
 
-        JButton deselectAllButton = new JButton("Deselect All");
+        deselectAllButton = new JButton("Deselect All");
+        deselectAllButton.setFont(uiFont);
         deselectAllButton.addActionListener(e -> deselectAll());
 
         processFilesButton = new JButton("Process Files");
+        processFilesButton.setFont(uiFont);
         processFilesButton.addActionListener(e -> processFiles());
 
         // Create action combo box with loaded plugins
         actionComboBox = new JComboBox<>();
+        actionComboBox.setFont(uiFont);
         for (FileAction action : availableActions) {
             actionComboBox.addItem(action);
         }
@@ -78,13 +112,18 @@ public class Main extends JFrame {
                 if (value instanceof FileAction) {
                     setText(((FileAction) value).getActionName());
                 }
+                setFont(uiFont);
                 return this;
             }
         });
 
+        JLabel actionLabel = new JLabel("Action:");
+        actionLabel.setFont(uiFont);
+        labels.add(actionLabel);
+
         buttonPanel.add(selectAllButton);
         buttonPanel.add(deselectAllButton);
-        buttonPanel.add(new JLabel("Action:"));
+        buttonPanel.add(actionLabel);
         buttonPanel.add(actionComboBox);
         buttonPanel.add(processFilesButton);
 
@@ -93,9 +132,11 @@ public class Main extends JFrame {
         // Create table model and table
         tableModel = new FileTableModel();
         fileTable = new JTable(tableModel);
+        fileTable.setFont(uiFont);
+        fileTable.getTableHeader().setFont(uiFont);
 
         // Configure table
-        fileTable.setRowHeight(25);
+        fileTable.setRowHeight(config.getTableRowHeight());
         fileTable.setFillsViewportHeight(true);
 
         // Set column widths
@@ -119,16 +160,16 @@ public class Main extends JFrame {
         // Create console area
         consoleArea = new JTextArea();
         consoleArea.setEditable(false);
-        consoleArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        consoleArea.setBackground(new Color(240, 240, 240)); // Light gray background
-        consoleArea.setForeground(new Color(60, 60, 60)); // Dark gray text
-        consoleArea.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        consoleArea.setFont(config.getConsoleFont());
+        consoleArea.setBackground(config.getConsoleBgColor());
+        consoleArea.setForeground(config.getConsoleTextColor());
+        consoleArea.setBorder(BorderFactory.createLineBorder(config.getConsoleBorderColor()));
         JScrollPane consoleScrollPane = new JScrollPane(consoleArea);
         consoleScrollPane.setPreferredSize(new Dimension(0, 150));
 
         // Create split pane with table on top and console on bottom
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, consoleScrollPane);
-        splitPane.setResizeWeight(0.7); // Give 70% space to table, 30% to console
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, consoleScrollPane);
+        splitPane.setResizeWeight(config.getSplitPaneRatio());
         splitPane.setOneTouchExpandable(true);
 
         add(splitPane, BorderLayout.CENTER);
@@ -144,6 +185,78 @@ public class Main extends JFrame {
             File selectedFolder = fileChooser.getSelectedFile();
             loadFolderContents(selectedFolder);
         }
+    }
+
+    private void openPropertiesEditor() {
+        PropertiesEditorDialog dialog = new PropertiesEditorDialog(this);
+        dialog.setVisible(true);
+
+        // If changes were made, refresh the UI
+        if (dialog.isChangesMade()) {
+            refreshUI();
+        }
+    }
+
+    private void refreshUI() {
+        // Reload configuration from file
+        config.reload();
+
+        Font uiFont = config.getUIFont();
+
+        // Update window properties
+        setTitle(config.getWindowTitle());
+        setSize(config.getWindowWidth(), config.getWindowHeight());
+
+        // Update menu bar and menus
+        menuBar.setFont(uiFont);
+        for (int i = 0; i < menuBar.getMenuCount(); i++) {
+            JMenu menu = menuBar.getMenu(i);
+            menu.setFont(uiFont);
+            for (int j = 0; j < menu.getItemCount(); j++) {
+                JMenuItem item = menu.getItem(j);
+                if (item != null) {
+                    item.setFont(uiFont);
+                }
+            }
+        }
+
+        // Update buttons
+        selectAllButton.setFont(uiFont);
+        deselectAllButton.setFont(uiFont);
+        processFilesButton.setFont(uiFont);
+
+        // Update labels
+        for (JLabel label : labels) {
+            label.setFont(uiFont);
+        }
+
+        // Update combo box
+        actionComboBox.setFont(uiFont);
+
+        // Update table
+        fileTable.setFont(uiFont);
+        fileTable.getTableHeader().setFont(uiFont);
+        fileTable.setRowHeight(config.getTableRowHeight());
+        fileTable.invalidate();
+        fileTable.repaint();
+
+        // Update console area
+        consoleArea.setFont(config.getConsoleFont());
+        consoleArea.setBackground(config.getConsoleBgColor());
+        consoleArea.setForeground(config.getConsoleTextColor());
+        consoleArea.setBorder(BorderFactory.createLineBorder(config.getConsoleBorderColor()));
+
+        // Force console area to recalculate layout with new font
+        consoleArea.invalidate();
+        consoleArea.getParent().revalidate();
+
+        // Update split pane ratio
+        splitPane.setResizeWeight(config.getSplitPaneRatio());
+        splitPane.setDividerLocation(config.getSplitPaneRatio());
+
+        // Force repaint of the entire frame
+        repaint();
+        revalidate();
     }
 
     private void loadFolderContents(File folder) {
@@ -393,8 +506,6 @@ public class Main extends JFrame {
 
     // Custom cell renderer to highlight checked rows
     private class CheckedRowRenderer extends DefaultTableCellRenderer {
-        private final Color HIGHLIGHT_COLOR = new Color(173, 216, 230); // Light blue
-
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus,
@@ -404,7 +515,7 @@ public class Main extends JFrame {
             // Check if the row's checkbox is checked
             Boolean checked = (Boolean) tableModel.getValueAt(row, 0);
             if (checked != null && checked) {
-                c.setBackground(HIGHLIGHT_COLOR);
+                c.setBackground(config.getHighlightColor());
             } else if (!isSelected) {
                 c.setBackground(table.getBackground());
             }
