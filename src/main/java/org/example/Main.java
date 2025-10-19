@@ -2,18 +2,15 @@ package org.example;
 
 import org.example.config.UIConfig;
 import org.example.logger.ConsoleLogger;
-import org.example.model.FileRow;
 import org.example.model.FileTableModel;
 import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 import org.example.plugin.PluginLoader;
 import org.example.processor.FileProcessor;
-import org.example.processor.ProcessingResult;
 import org.example.ui.FileTable;
 import org.example.ui.PropertiesEditorDialog;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
@@ -63,7 +60,7 @@ public class Main extends JFrame {
         createMenuBar(uiFont);
         setJMenuBar(menuBar);
         add(createButtonPanel(uiFont), BorderLayout.NORTH);
-        createFileTable(uiFont);
+        createFileTable();
         createSplitPlane(new JScrollPane(fileTable), createConsolePane());
         add(splitPane, BorderLayout.CENTER);
     }
@@ -89,7 +86,7 @@ public class Main extends JFrame {
         return buttonPanel;
     }
 
-    private void createFileTable(Font uiFont) {
+    private void createFileTable() {
         tableModel = new FileTableModel();
         fileTable = new FileTable(tableModel, config);
     }
@@ -352,8 +349,7 @@ public class Main extends JFrame {
 
     // Create logger for plugins
     private ActionLogger loggerForPlugins() {
-        ActionLogger logger = new ConsoleLogger(consoleArea);
-        return logger;
+        return new ConsoleLogger(consoleArea);
     }
 
     // Disable the process button during execution
