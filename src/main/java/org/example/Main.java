@@ -1,26 +1,29 @@
 package org.example;
 
 import org.example.config.UIConfig;
+import org.example.logger.ConsoleLogger;
+import org.example.model.FileRow;
+import org.example.model.FileTableModel;
 import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
 import org.example.plugin.PluginLoader;
+import org.example.processor.FileProcessor;
+import org.example.processor.ProcessingResult;
+import org.example.ui.FileTable;
 import org.example.ui.PropertiesEditorDialog;
 
 import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Main extends JFrame {
-    private JTable fileTable;
+    private FileTable fileTable;
     private FileTableModel tableModel;
     private JComboBox<FileAction> actionComboBox;
-    private final List<FileAction> availableActions;
+    private List<FileAction> availableActions;
     private JTextArea consoleArea;
     private JButton processFilesButton;
     private UIConfig config;
@@ -29,62 +32,97 @@ public class Main extends JFrame {
     private JButton selectAllButton;
     private JButton deselectAllButton;
     private List<JLabel> labels;
+    private FileProcessor fileProcessor;
 
     public Main() {
-        // Load UI configuration
-        config = UIConfig.getInstance();
+        loadUIConfiguration();
+        loadPlugins();
+        fileProcessor = new FileProcessor();
+        initComponents();
+    }
 
-        setTitle(config.getWindowTitle());
-        setSize(config.getWindowWidth(), config.getWindowHeight());
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new Main().setVisible(true));
+    }
+
+    private void loadUIConfiguration() {
+        config = UIConfig.getInstance();
+        updateWindowProperties();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+    }
 
-        // Load plugins
+    private void loadPlugins() {
         availableActions = PluginLoader.loadPlugins();
         System.out.println("Loaded " + availableActions.size() + " plugin(s)");
-
-        initComponents();
     }
 
     private void initComponents() {
         labels = new ArrayList<>();
-
-        // Create menu bar
-        menuBar = new JMenuBar();
         Font uiFont = config.getUIFont();
-        menuBar.setFont(uiFont);
-
-        // Create File menu
-        JMenu fileMenu = new JMenu("File");
-        fileMenu.setFont(uiFont);
-
-        // Create Open Folder menu item
-        JMenuItem openFolderItem = new JMenuItem("Open Folder");
-        openFolderItem.setFont(uiFont);
-        openFolderItem.addActionListener(e -> openFolder());
-
-        fileMenu.add(openFolderItem);
-        menuBar.add(fileMenu);
-
-        // Create Settings menu
-        JMenu settingsMenu = new JMenu("Settings");
-        settingsMenu.setFont(uiFont);
-
-        // Create UI Properties menu item
-        JMenuItem uiPropertiesItem = new JMenuItem("UI Properties...");
-        uiPropertiesItem.setFont(uiFont);
-        uiPropertiesItem.addActionListener(e -> openPropertiesEditor());
-
-        settingsMenu.add(uiPropertiesItem);
-        menuBar.add(settingsMenu);
-
+        createMenuBar(uiFont);
         setJMenuBar(menuBar);
+        add(createButtonPanel(uiFont), BorderLayout.NORTH);
+        createFileTable(uiFont);
+        createSplitPlane(new JScrollPane(fileTable), createConsolePane());
+        add(splitPane, BorderLayout.CENTER);
+    }
 
-        // Create button panel
+    private void createMenuBar(Font uiFont) {
+        menuBar = new JMenuBar();
+        menuBar.setFont(uiFont);
+        menuBar.add(createFileMenu(uiFont));
+        menuBar.add(createSettingsMenu(uiFont));
+    }
+
+    private JPanel createButtonPanel(Font uiFont) {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        createButtons(uiFont);
+        createActionCombo(uiFont);
 
-        // Create buttons
+        buttonPanel.add(selectAllButton);
+        buttonPanel.add(deselectAllButton);
+        buttonPanel.add(createActionLabel(uiFont));
+        buttonPanel.add(actionComboBox);
+        buttonPanel.add(processFilesButton);
+        return buttonPanel;
+    }
+
+    private void createFileTable(Font uiFont) {
+        tableModel = new FileTableModel();
+        fileTable = new FileTable(tableModel, config);
+    }
+
+    // Create split pane with table on top and console on bottom
+    private void createSplitPlane(JScrollPane tableScrollPane, JScrollPane consoleScrollPane) {
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, consoleScrollPane);
+        splitPane.setResizeWeight(config.getSplitPaneRatio());
+        splitPane.setOneTouchExpandable(true);
+    }
+
+    private JScrollPane createConsolePane() {
+        createConsoleArea();
+        JScrollPane consoleScrollPane = new JScrollPane(consoleArea);
+        consoleScrollPane.setPreferredSize(new Dimension(0, 150));
+        return consoleScrollPane;
+    }
+
+    private JMenu createFileMenu(Font uiFont) {
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setFont(uiFont);
+        fileMenu.add(createOpenFolderMenuItem(uiFont));
+        return fileMenu;
+    }
+
+    private JMenu createSettingsMenu(Font uiFont) {
+        JMenu settingsMenu = new JMenu("Settings");
+        settingsMenu.setFont(uiFont);
+        settingsMenu.add(createIOPropertiesMenuItem(uiFont));
+        return settingsMenu;
+    }
+
+    private void createButtons(Font uiFont) {
         selectAllButton = new JButton("Select All");
         selectAllButton.setFont(uiFont);
         selectAllButton.addActionListener(e -> selectAll());
@@ -96,15 +134,40 @@ public class Main extends JFrame {
         processFilesButton = new JButton("Process Files");
         processFilesButton.setFont(uiFont);
         processFilesButton.addActionListener(e -> processFiles());
+    }
 
-        // Create action combo box with loaded plugins
+    private void createActionCombo(Font uiFont) {
         actionComboBox = new JComboBox<>();
-        actionComboBox.setFont(uiFont);
+        updateComboBox(uiFont);
         for (FileAction action : availableActions) {
             actionComboBox.addItem(action);
         }
-        // Custom renderer to display action names
-        actionComboBox.setRenderer(new DefaultListCellRenderer() {
+        actionComboBox.setRenderer(customerRenderForActionNames(uiFont));
+    }
+
+    private JLabel createActionLabel(Font uiFont) {
+        JLabel actionLabel = new JLabel("Action:");
+        actionLabel.setFont(uiFont);
+        labels.add(actionLabel);
+        return actionLabel;
+    }
+
+    private JMenuItem createOpenFolderMenuItem(Font uiFont) {
+        JMenuItem openFolderItem = new JMenuItem("Open Folder");
+        openFolderItem.setFont(uiFont);
+        openFolderItem.addActionListener(e -> openFolder());
+        return openFolderItem;
+    }
+
+    private JMenuItem createIOPropertiesMenuItem(Font uiFont) {
+        JMenuItem uiPropertiesItem = new JMenuItem("UI Properties...");
+        uiPropertiesItem.setFont(uiFont);
+        uiPropertiesItem.addActionListener(e -> openPropertiesEditor());
+        return uiPropertiesItem;
+    }
+
+    private DefaultListCellRenderer customerRenderForActionNames(Font uiFont) {
+        return new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
                                                           int index, boolean isSelected, boolean cellHasFocus) {
@@ -115,64 +178,7 @@ public class Main extends JFrame {
                 setFont(uiFont);
                 return this;
             }
-        });
-
-        JLabel actionLabel = new JLabel("Action:");
-        actionLabel.setFont(uiFont);
-        labels.add(actionLabel);
-
-        buttonPanel.add(selectAllButton);
-        buttonPanel.add(deselectAllButton);
-        buttonPanel.add(actionLabel);
-        buttonPanel.add(actionComboBox);
-        buttonPanel.add(processFilesButton);
-
-        add(buttonPanel, BorderLayout.NORTH);
-
-        // Create table model and table
-        tableModel = new FileTableModel();
-        fileTable = new JTable(tableModel);
-        fileTable.setFont(uiFont);
-        fileTable.getTableHeader().setFont(uiFont);
-
-        // Configure table
-        fileTable.setRowHeight(config.getTableRowHeight());
-        fileTable.setFillsViewportHeight(true);
-
-        // Set column widths
-        fileTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // Checkbox
-        fileTable.getColumnModel().getColumn(0).setMaxWidth(50);
-        fileTable.getColumnModel().getColumn(1).setPreferredWidth(80);  // Type
-        fileTable.getColumnModel().getColumn(2).setPreferredWidth(300); // Name
-        fileTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Size
-        fileTable.getColumnModel().getColumn(4).setPreferredWidth(150); // Date
-
-        // Add custom cell renderer for highlighting checked rows
-        CheckedRowRenderer renderer = new CheckedRowRenderer();
-        fileTable.getColumnModel().getColumn(1).setCellRenderer(renderer);
-        fileTable.getColumnModel().getColumn(2).setCellRenderer(renderer);
-        fileTable.getColumnModel().getColumn(3).setCellRenderer(renderer);
-        fileTable.getColumnModel().getColumn(4).setCellRenderer(renderer);
-
-        // Add scroll pane for table
-        JScrollPane tableScrollPane = new JScrollPane(fileTable);
-
-        // Create console area
-        consoleArea = new JTextArea();
-        consoleArea.setEditable(false);
-        consoleArea.setFont(config.getConsoleFont());
-        consoleArea.setBackground(config.getConsoleBgColor());
-        consoleArea.setForeground(config.getConsoleTextColor());
-        consoleArea.setBorder(BorderFactory.createLineBorder(config.getConsoleBorderColor()));
-        JScrollPane consoleScrollPane = new JScrollPane(consoleArea);
-        consoleScrollPane.setPreferredSize(new Dimension(0, 150));
-
-        // Create split pane with table on top and console on bottom
-        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, consoleScrollPane);
-        splitPane.setResizeWeight(config.getSplitPaneRatio());
-        splitPane.setOneTouchExpandable(true);
-
-        add(splitPane, BorderLayout.CENTER);
+        };
     }
 
     private void openFolder() {
@@ -197,17 +203,43 @@ public class Main extends JFrame {
         }
     }
 
+    private void loadFolderContents(File folder) {
+        tableModel.clear();
+
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                tableModel.addFile(file);
+            }
+        }
+    }
+
     private void refreshUI() {
-        // Reload configuration from file
-        config.reload();
-
+        reloadConfiguration();
         Font uiFont = config.getUIFont();
+        updateWindowProperties();
+        updateMenus(uiFont);
+        updateButtons(uiFont);
+        updateLabels(uiFont);
+        updateComboBox(uiFont);
+        updateTable();
+        updateConsoleArea();
+        updateSplitPaneRatio();
+        repaintTheFrame();
+    }
 
-        // Update window properties
+    // Reload configuration from file
+    private void reloadConfiguration() {
+        config.reload();
+    }
+
+    private void updateWindowProperties() {
         setTitle(config.getWindowTitle());
         setSize(config.getWindowWidth(), config.getWindowHeight());
+    }
 
-        // Update menu bar and menus
+    // Update menu bar and menus
+    private void updateMenus(Font uiFont) {
         menuBar.setFont(uiFont);
         for (int i = 0; i < menuBar.getMenuCount(); i++) {
             JMenu menu = menuBar.getMenu(i);
@@ -219,55 +251,55 @@ public class Main extends JFrame {
                 }
             }
         }
+    }
 
-        // Update buttons
+    private void updateButtons(Font uiFont) {
         selectAllButton.setFont(uiFont);
         deselectAllButton.setFont(uiFont);
         processFilesButton.setFont(uiFont);
+    }
 
-        // Update labels
+    private void updateLabels(Font uiFont) {
         for (JLabel label : labels) {
             label.setFont(uiFont);
         }
+    }
 
-        // Update combo box
+    private void updateComboBox(Font uiFont) {
         actionComboBox.setFont(uiFont);
+    }
 
-        // Update table
-        fileTable.setFont(uiFont);
-        fileTable.getTableHeader().setFont(uiFont);
-        fileTable.setRowHeight(config.getTableRowHeight());
-        fileTable.invalidate();
-        fileTable.repaint();
+    private void updateTable() {
+        fileTable.refreshConfiguration();
+    }
 
-        // Update console area
+    private void updateConsoleArea() {
         consoleArea.setFont(config.getConsoleFont());
         consoleArea.setBackground(config.getConsoleBgColor());
         consoleArea.setForeground(config.getConsoleTextColor());
         consoleArea.setBorder(BorderFactory.createLineBorder(config.getConsoleBorderColor()));
-
-        // Force console area to recalculate layout with new font
         consoleArea.invalidate();
         consoleArea.getParent().revalidate();
+    }
 
-        // Update split pane ratio
+    private void updateSplitPaneRatio() {
         splitPane.setResizeWeight(config.getSplitPaneRatio());
         splitPane.setDividerLocation(config.getSplitPaneRatio());
+    }
 
-        // Force repaint of the entire frame
+    // Force repaint of the entire frame
+    private void repaintTheFrame() {
         repaint();
         revalidate();
     }
 
-    private void loadFolderContents(File folder) {
-        tableModel.clear();
-
-        File[] files = folder.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                tableModel.addFile(file);
-            }
-        }
+    private void createConsoleArea() {
+        consoleArea = new JTextArea();
+        consoleArea.setEditable(false);
+        consoleArea.setFont(config.getConsoleFont());
+        consoleArea.setBackground(config.getConsoleBgColor());
+        consoleArea.setForeground(config.getConsoleTextColor());
+        consoleArea.setBorder(BorderFactory.createLineBorder(config.getConsoleBorderColor()));
     }
 
     private void selectAll() {
@@ -280,251 +312,70 @@ public class Main extends JFrame {
 
     private void processFiles() {
         List<File> selectedFiles = tableModel.getSelectedFiles();
-
-        if (selectedFiles.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "No files selected!",
-                "Warning",
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        if (validateSelectedFiles(selectedFiles)) return;
 
         FileAction selectedAction = (FileAction) actionComboBox.getSelectedItem();
+        if (validateSelectedAction(selectedAction)) return;
+
+        clearConsole();
+        ActionLogger logger = loggerForPlugins();
+        disableProcessButton();
+        processFilesAsync(selectedFiles, selectedAction, logger);
+    }
+
+    private boolean validateSelectedFiles(List<File> selectedFiles) {
+        if (selectedFiles.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No files selected!",
+                    "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean validateSelectedAction(FileAction selectedAction) {
         if (selectedAction == null) {
             JOptionPane.showMessageDialog(this,
-                "No action selected!",
-                "Warning",
-                JOptionPane.WARNING_MESSAGE);
-            return;
+                    "No action selected!",
+                    "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return true;
         }
+        return false;
+    }
 
-        // Clear console before processing
+    // Clear console before processing
+    private void clearConsole() {
         consoleArea.setText("");
+    }
 
-        // Create logger for plugins
-        ActionLogger logger = new ConsoleLogger();
+    // Create logger for plugins
+    private ActionLogger loggerForPlugins() {
+        ActionLogger logger = new ConsoleLogger(consoleArea);
+        return logger;
+    }
 
-        // Disable the process button during execution
+    // Disable the process button during execution
+    private void disableProcessButton() {
         processFilesButton.setEnabled(false);
+    }
 
-        // Run processing in background thread
-        final FileAction action = selectedAction;
-        new Thread(() -> {
-            logger.info("Processing " + selectedFiles.size() + " file(s) with action: " + action.getActionName());
-            int successCount = 0;
-            int errorCount = 0;
-
-            for (File file : selectedFiles) {
-                try {
-                    action.execute(file, logger);
-                    successCount++;
-                } catch (Exception e) {
-                    errorCount++;
-                    logger.error("Error processing " + file.getName() + ": " + e.getMessage(), e);
-                }
-            }
-
-            logger.info("Processing complete. Success: " + successCount + ", Errors: " + errorCount);
-
-            final int finalSuccessCount = successCount;
-            final int finalErrorCount = errorCount;
-
+    private void processFilesAsync(List<File> selectedFiles, FileAction selectedAction, ActionLogger logger) {
+        fileProcessor.processFilesAsync(selectedFiles, selectedAction, logger, result -> {
             // Re-enable the process button on the UI thread
             SwingUtilities.invokeLater(() -> {
                 processFilesButton.setEnabled(true);
 
-                if (finalErrorCount > 0) {
+                if (result.hasErrors()) {
                     JOptionPane.showMessageDialog(Main.this,
-                        "Processing completed with errors.\nSuccess: " + finalSuccessCount + "\nErrors: " + finalErrorCount,
-                        "Processing Result",
-                        JOptionPane.WARNING_MESSAGE);
+                            "Processing completed with errors.\nSuccess: " + result.getSuccessCount() +
+                                    "\nErrors: " + result.getErrorCount(),
+                            "Processing Result",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             });
-        }).start();
+        });
     }
 
-    // Logger implementation that writes to the console area
-    private class ConsoleLogger implements ActionLogger {
-        @Override
-        public void info(String message) {
-            SwingUtilities.invokeLater(() -> {
-                consoleArea.append("[INFO] " + message + "\n");
-                consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
-            });
-        }
-
-        @Override
-        public void error(String message) {
-            SwingUtilities.invokeLater(() -> {
-                consoleArea.append("[ERROR] " + message + "\n");
-                consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
-            });
-        }
-
-        @Override
-        public void error(String message, Throwable throwable) {
-            SwingUtilities.invokeLater(() -> {
-                consoleArea.append("[ERROR] " + message + "\n");
-                if (throwable != null) {
-                    consoleArea.append("  Exception: " + throwable.getClass().getName() + ": " + throwable.getMessage() + "\n");
-                }
-                consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
-            });
-        }
-    }
-
-    // Custom table model for file data
-    private static class FileTableModel extends AbstractTableModel {
-        private final String[] columnNames = {"Select", "Type", "Name", "Size", "Modified Date"};
-        private final List<FileRow> rows = new ArrayList<>();
-        private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-        @Override
-        public int getRowCount() {
-            return rows.size();
-        }
-
-        @Override
-        public int getColumnCount() {
-            return columnNames.length;
-        }
-
-        @Override
-        public String getColumnName(int column) {
-            return columnNames[column];
-        }
-
-        @Override
-        public Class<?> getColumnClass(int columnIndex) {
-            switch (columnIndex) {
-                case 0:
-                    return Boolean.class;
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    return String.class;
-                default:
-                    return Object.class;
-            }
-        }
-
-        @Override
-        public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return columnIndex == 0; // Only checkbox column is editable
-        }
-
-        @Override
-        public Object getValueAt(int rowIndex, int columnIndex) {
-            FileRow row = rows.get(rowIndex);
-            switch (columnIndex) {
-                case 0:
-                    return row.isSelected();
-                case 1:
-                    return row.getFile().isDirectory() ? "Directory" : "File";
-                case 2:
-                    return row.getFile().getName();
-                case 3:
-                    return row.getFile().isDirectory() ? "" : formatFileSize(row.getFile().length());
-                case 4:
-                    return dateFormat.format(new Date(row.getFile().lastModified()));
-                default:
-                    return null;
-            }
-        }
-
-        @Override
-        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-            if (columnIndex == 0) {
-                rows.get(rowIndex).setSelected((Boolean) aValue);
-                fireTableCellUpdated(rowIndex, columnIndex);
-            }
-        }
-
-        public void addFile(File file) {
-            rows.add(new FileRow(file));
-            fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
-        }
-
-        public void clear() {
-            rows.clear();
-            fireTableDataChanged();
-        }
-
-        public void setAllSelected(boolean selected) {
-            for (FileRow row : rows) {
-                row.setSelected(selected);
-            }
-            fireTableDataChanged();
-        }
-
-        public List<File> getSelectedFiles() {
-            List<File> selectedFiles = new ArrayList<>();
-            for (FileRow row : rows) {
-                if (row.isSelected()) {
-                    selectedFiles.add(row.getFile());
-                }
-            }
-            return selectedFiles;
-        }
-
-        private String formatFileSize(long size) {
-            if (size < 1024) {
-                return size + " B";
-            } else if (size < 1024 * 1024) {
-                return String.format("%.2f KB", size / 1024.0);
-            } else if (size < 1024 * 1024 * 1024) {
-                return String.format("%.2f MB", size / (1024.0 * 1024));
-            } else {
-                return String.format("%.2f GB", size / (1024.0 * 1024 * 1024));
-            }
-        }
-    }
-
-    // Inner class to represent a file row with checkbox state
-    private static class FileRow {
-        private final File file;
-        private boolean selected;
-
-        public FileRow(File file) {
-            this.file = file;
-            this.selected = false;
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        public boolean isSelected() {
-            return selected;
-        }
-
-        public void setSelected(boolean selected) {
-            this.selected = selected;
-        }
-    }
-
-    // Custom cell renderer to highlight checked rows
-    private class CheckedRowRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus,
-                                                       int row, int column) {
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
-            // Check if the row's checkbox is checked
-            Boolean checked = (Boolean) tableModel.getValueAt(row, 0);
-            if (checked != null && checked) {
-                c.setBackground(config.getHighlightColor());
-            } else if (!isSelected) {
-                c.setBackground(table.getBackground());
-            }
-
-            return c;
-        }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Main().setVisible(true));
-    }
 }
