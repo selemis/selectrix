@@ -23,10 +23,22 @@ repositories {
     mavenCentral()
 }
 
+// Custom configuration for external plugins
+configurations {
+    externalPlugins {
+        canBeResolved = true
+        canBeConsumed = false
+        transitive = false  // Don't include transitive dependencies
+    }
+}
+
 dependencies {
     testImplementation platform('org.spockframework:spock-bom:2.3-groovy-3.0')
     testImplementation 'org.spockframework:spock-core'
     testImplementation 'org.codehaus.groovy:groovy-all:3.0.21'
+
+    // External plugins (fetched from Maven Local)
+    externalPlugins 'org.example.plugins:unzip-plugin:1.0'
 }
 
 test {
@@ -69,6 +81,33 @@ task pluginApiJar(type: Jar) {
 
 // Make the plugin API jar depend on compilation
 pluginApiJar.dependsOn classes
+
+// Task to copy external plugins from Maven Local to plugins directory
+task copyExternalPlugins(type: Copy) {
+    description = 'Copies external plugin JARs from Maven Local to plugins directory'
+    group = 'plugin'
+
+    from configurations.externalPlugins
+    into "${projectDir}/plugins"
+
+    doFirst {
+        // Clean the plugins directory first
+        delete fileTree("${projectDir}/plugins") {
+            include '*.jar'
+        }
+        println "Resolving external plugins from Maven Local..."
+    }
+
+    doLast {
+        println "External plugins copied to plugins/:"
+        fileTree("${projectDir}/plugins").files.each { file ->
+            println "  - ${file.name}"
+        }
+    }
+}
+
+// Make build depend on copying plugins
+processResources.dependsOn copyExternalPlugins
 
 // Configure Maven Publishing for the Plugin API
 publishing {

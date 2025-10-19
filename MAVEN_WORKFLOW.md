@@ -4,11 +4,12 @@ This guide explains the Maven Local workflow for managing the File Selector Plug
 
 ## Overview
 
-The Plugin API is published to Maven Local (`~/.m2/repository`) instead of being distributed as a JAR file. This provides:
+Both the Plugin API and external plugins are managed through Maven Local (`~/.m2/repository`). This provides:
 - Standard dependency management
 - Version control
 - Automatic resolution
 - Professional development workflow
+- Centralized plugin distribution
 
 ## Publishing the Plugin API
 
@@ -30,6 +31,52 @@ cd /path/to/FileSelector
 This needs to be done:
 - **Once** when setting up plugin development
 - **After any changes** to the plugin API interfaces (FileAction, ActionLogger)
+
+## Publishing External Plugins
+
+### From Plugin Project
+
+Publish your plugin to Maven Local:
+
+```bash
+cd /path/to/your-plugin
+./gradlew publishToMavenLocal
+```
+
+**Example for unzip-plugin:**
+- **Group ID:** `org.example.plugins`
+- **Artifact ID:** `unzip-plugin`
+- **Version:** `1.0`
+- **Location:** `~/.m2/repository/org/example/plugins/unzip-plugin/1.0/`
+
+## Using Plugins in FileSelector
+
+### Declaring Plugin Dependencies
+
+In FileSelector's `build.gradle`, add plugins to the `externalPlugins` configuration:
+
+```gradle
+dependencies {
+    // External plugins (fetched from Maven Local)
+    externalPlugins 'org.example.plugins:unzip-plugin:1.0'
+    externalPlugins 'org.example.plugins:another-plugin:1.0'
+    // Add more plugins as needed
+}
+```
+
+### Automatic Plugin Resolution
+
+When you build FileSelector, the `copyExternalPlugins` task automatically:
+1. Resolves plugin dependencies from Maven Local
+2. Cleans the `plugins/` directory
+3. Copies all declared plugins to `plugins/`
+
+```bash
+cd /path/to/FileSelector
+./gradlew build  # Automatically copies plugins
+# or
+./gradlew copyExternalPlugins  # Just copy plugins
+```
 
 ## Using the Plugin API in Plugins
 
@@ -55,30 +102,70 @@ cd /path/to/your-plugin
 
 Gradle will automatically fetch the API from `~/.m2/repository`.
 
-## Workflow for Plugin Developers
+## Complete Workflow
 
-### Initial Setup
+### Initial Setup (One-Time)
 
-1. Clone or create your plugin project
-2. Ensure the Plugin API is published to Maven Local:
+1. **Publish the Plugin API** (FileSelector maintainers):
    ```bash
    cd /path/to/FileSelector
    ./gradlew publishPluginApiPublicationToMavenLocal
    ```
-3. Build your plugin:
+
+2. **Develop your plugin**:
    ```bash
    cd /path/to/your-plugin
+   # Implement your plugin
+   ```
+
+3. **Publish your plugin to Maven Local**:
+   ```bash
+   cd /path/to/your-plugin
+   ./gradlew publishToMavenLocal
+   ```
+
+4. **Add plugin to FileSelector** (edit `build.gradle`):
+   ```gradle
+   dependencies {
+       externalPlugins 'org.example.plugins:your-plugin:1.0'
+   }
+   ```
+
+5. **Build FileSelector** (automatically copies plugins):
+   ```bash
+   cd /path/to/FileSelector
    ./gradlew build
    ```
 
-### Development Cycle
+### Plugin Development Cycle
 
+**Option 1: Using Maven Local (Recommended)**
 ```bash
-# Make changes to your plugin
-# Build and deploy
+# 1. Make changes to your plugin
+cd /path/to/your-plugin
+
+# 2. Publish to Maven Local
+./gradlew publishToMavenLocal
+
+# 3. Rebuild FileSelector (copies updated plugin)
+cd /path/to/FileSelector
+./gradlew copyExternalPlugins
+
+# 4. Run FileSelector to test
+./gradlew run  # or launch from IDE
+```
+
+**Option 2: Quick Local Testing**
+```bash
+# 1. Make changes to your plugin
+cd /path/to/your-plugin
+
+# 2. Deploy directly to FileSelector (bypasses Maven)
 ./gradlew deployPlugin
 
-# Test in File Selector application
+# 3. Run FileSelector to test
+cd /path/to/FileSelector
+./gradlew run
 ```
 
 ### When API Changes
@@ -86,13 +173,20 @@ Gradle will automatically fetch the API from `~/.m2/repository`.
 If the FileSelector team updates the plugin API:
 
 ```bash
-# Update API in Maven Local
+# 1. Republish API to Maven Local
 cd /path/to/FileSelector
 ./gradlew publishPluginApiPublicationToMavenLocal
 
-# Rebuild your plugin
+# 2. Rebuild your plugin
 cd /path/to/your-plugin
 ./gradlew clean build
+
+# 3. Republish your plugin
+./gradlew publishToMavenLocal
+
+# 4. Update FileSelector
+cd /path/to/FileSelector
+./gradlew copyExternalPlugins
 ```
 
 ## Alternative: Direct JAR Distribution
@@ -125,11 +219,21 @@ The Plugin API is published to:
 
 ## Advantages of Maven Local Approach
 
+### For Plugin API
 1. **No JAR file copying** - Automatic dependency resolution
 2. **Version management** - Clear versioning and compatibility
 3. **Standard practice** - Industry-standard approach
 4. **Cleaner repositories** - No binary files in git
 5. **Multi-plugin support** - All plugins share the same API version
+
+### For External Plugins
+1. **Centralized management** - Plugins declared in build.gradle
+2. **Automatic updates** - Change version, rebuild, done
+3. **Clean builds** - `./gradlew clean` removes all plugins, rebuild fetches them
+4. **Dependency resolution** - Gradle handles everything
+5. **Version control** - Easy to track which plugin versions are used
+6. **No manual copying** - Build process handles plugin deployment
+7. **Team consistency** - Everyone gets the same plugins from build.gradle
 
 ## Troubleshooting
 
