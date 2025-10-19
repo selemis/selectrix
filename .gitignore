@@ -53,5 +53,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+# Plugin API distribution
+api/
 
+# External plugins (loaded at runtime)
 plugins/

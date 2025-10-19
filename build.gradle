@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'groovy'
+    id 'maven-publish'
 }
 
 group = 'org.example'
@@ -32,33 +33,76 @@ test {
     useJUnitPlatform()
 }
 
-// Task to build the unzip plugin as a standalone JAR
-task unzipPluginJar(type: Jar) {
-    archiveBaseName = 'unzip-plugin'
+// Task to build the plugin API JAR (only interfaces needed for plugin development)
+task pluginApiJar(type: Jar) {
+    archiveBaseName = 'file-selector-plugin-api'
     archiveVersion = '1.0'
 
-    // Include only the UnzipFileAction class and the service loader configuration
+    // Include only the plugin API interfaces
     from(sourceSets.main.output) {
         include 'org/example/plugin/FileAction.class'
         include 'org/example/plugin/ActionLogger.class'
-        include 'org/example/plugin/impl/UnzipFileAction.class'
-        include 'org/example/plugin/impl/UnzipFileAction$*.class' // Inner classes if any
-        include 'META-INF/services/org.example.plugin.FileAction'
+    }
+
+    // Also include source files for plugin developers
+    from(sourceSets.main.java) {
+        include 'org/example/plugin/FileAction.java'
+        include 'org/example/plugin/ActionLogger.java'
+        into 'sources'
     }
 
     // Set the destination directory
-    destinationDirectory = file("${projectDir}/plugins")
+    destinationDirectory = file("${projectDir}/api")
 
     manifest {
         attributes(
-            'Implementation-Title': 'Unzip Plugin',
+            'Implementation-Title': 'File Selector Plugin API',
             'Implementation-Version': archiveVersion,
             'Built-By': System.getProperty('user.name'),
             'Built-Date': new Date(),
-            'Built-JDK': System.getProperty('java.version')
+            'Built-JDK': System.getProperty('java.version'),
+            'Specification-Title': 'File Selector Plugin API',
+            'Specification-Version': archiveVersion
         )
     }
 }
 
-// Make the plugin jar depend on compilation
-unzipPluginJar.dependsOn classes
+// Make the plugin API jar depend on compilation
+pluginApiJar.dependsOn classes
+
+// Configure Maven Publishing for the Plugin API
+publishing {
+    publications {
+        pluginApi(MavenPublication) {
+            groupId = 'org.example.fileselector'
+            artifactId = 'plugin-api'
+            version = '1.0'
+
+            // Publish the plugin API JAR
+            artifact(pluginApiJar) {
+                classifier = ''
+            }
+
+            pom {
+                name = 'File Selector Plugin API'
+                description = 'Plugin API for File Selector application'
+
+                developers {
+                    developer {
+                        id = 'fileselector'
+                        name = 'File Selector Team'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
+}
+
+// Make publishing depend on the API JAR being built
+tasks.named('publishPluginApiPublicationToMavenLocal') {
+    dependsOn pluginApiJar
+}
