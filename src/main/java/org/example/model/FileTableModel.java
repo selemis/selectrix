@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 public class FileTableModel extends AbstractTableModel {
-    private final String[] columnNames = {"Select", "Type", "Name", "Size", "Modified Date"};
+    private final String[] columnNames = {"Select", "Type", "Name", "Extension", "Size", "Modified Date"};
     private final List<FileRow> rows = new ArrayList<>();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -36,6 +36,7 @@ public class FileTableModel extends AbstractTableModel {
             case 2:
             case 3:
             case 4:
+            case 5:
                 return String.class;
             default:
                 return Object.class;
@@ -58,12 +59,35 @@ public class FileTableModel extends AbstractTableModel {
             case 2:
                 return row.getFile().getName();
             case 3:
-                return row.getFile().isDirectory() ? "" : formatFileSize(row.getFile().length());
+                return getFileExtension(row.getFile());
             case 4:
+                return row.getFile().isDirectory() ? "" : formatFileSize(row.getFile().length());
+            case 5:
                 return dateFormat.format(new Date(row.getFile().lastModified()));
             default:
                 return null;
         }
+    }
+
+    /**
+     * Extract the file extension from a file.
+     * Returns empty string for directories or files without extension.
+     */
+    private String getFileExtension(File file) {
+        if (file.isDirectory()) {
+            return "";
+        }
+
+        String name = file.getName();
+        int lastDot = name.lastIndexOf('.');
+
+        // No extension or hidden file (starts with .)
+        if (lastDot == -1 || lastDot == 0) {
+            return "";
+        }
+
+        // Return extension without the dot
+        return name.substring(lastDot + 1);
     }
 
     @Override

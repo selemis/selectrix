@@ -50,11 +50,14 @@ public class FileTable extends JTable {
         // Column 2: Name - String comparison
         sorter.setComparator(2, Comparator.naturalOrder());
 
-        // Column 3: Size - Parse file size for proper numeric sorting
-        sorter.setComparator(3, new FileSizeComparator());
+        // Column 3: Extension - String comparison (case-insensitive)
+        sorter.setComparator(3, String.CASE_INSENSITIVE_ORDER);
 
-        // Column 4: Modified Date - String date comparison (format: yyyy-MM-dd HH:mm:ss)
-        sorter.setComparator(4, Comparator.naturalOrder());
+        // Column 4: Size - Parse file size for proper numeric sorting
+        sorter.setComparator(4, new FileSizeComparator());
+
+        // Column 5: Modified Date - String date comparison (format: yyyy-MM-dd HH:mm:ss)
+        sorter.setComparator(5, Comparator.naturalOrder());
     }
 
     private void setFonts(Font uiFont) {
@@ -76,8 +79,9 @@ public class FileTable extends JTable {
         getColumnModel().getColumn(0).setMaxWidth(80);  // Allow some flexibility
         getColumnModel().getColumn(1).setMinWidth(80);  // Type
         getColumnModel().getColumn(2).setMinWidth(150); // Name
-        getColumnModel().getColumn(3).setMinWidth(80);  // Size
-        getColumnModel().getColumn(4).setMinWidth(140); // Date
+        getColumnModel().getColumn(3).setMinWidth(60);  // Extension
+        getColumnModel().getColumn(4).setMinWidth(80);  // Size
+        getColumnModel().getColumn(5).setMinWidth(140); // Date
     }
 
     /**
@@ -133,9 +137,12 @@ public class FileTable extends JTable {
             // Name column - allow to grow but have max
             return Math.min(Math.max(maxWidth, 200), 600);
         } else if (columnIndex == 3) {
+            // Extension column - limited width
+            return Math.min(Math.max(maxWidth, 60), 100);
+        } else if (columnIndex == 4) {
             // Size column - limited width
             return Math.min(maxWidth, 120);
-        } else if (columnIndex == 4) {
+        } else if (columnIndex == 5) {
             // Date column - fixed reasonable width
             return Math.max(maxWidth, 160);
         }
@@ -150,6 +157,7 @@ public class FileTable extends JTable {
         getColumnModel().getColumn(2).setCellRenderer(renderer);
         getColumnModel().getColumn(3).setCellRenderer(renderer);
         getColumnModel().getColumn(4).setCellRenderer(renderer);
+        getColumnModel().getColumn(5).setCellRenderer(renderer);
     }
 
     public void refreshConfiguration() {
