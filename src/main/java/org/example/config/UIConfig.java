@@ -92,11 +92,65 @@ public class UIConfig {
     public void saveProperties() {
         try {
             propertiesFile.getParentFile().mkdirs();
-            try (FileOutputStream fos = new FileOutputStream(propertiesFile)) {
-                properties.store(fos, "File Selector UI Configuration");
+
+            // Try to copy the formatted template from resources
+            InputStream templateStream = getClass().getClassLoader().getResourceAsStream("ui.properties");
+            if (templateStream != null) {
+                // Copy the template file to user directory
+                try (FileOutputStream fos = new FileOutputStream(propertiesFile)) {
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = templateStream.read(buffer)) > 0) {
+                        fos.write(buffer, 0, length);
+                    }
+                }
+                templateStream.close();
+            } else {
+                // Fallback: write formatted properties manually
+                writeFormattedProperties();
             }
         } catch (IOException e) {
             System.err.println("Error saving properties file: " + e.getMessage());
+        }
+    }
+
+    private void writeFormattedProperties() throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(propertiesFile))) {
+            writer.write("# File Selector UI Configuration\n");
+            writer.write("# This file contains customizable UI settings for the File Selector application\n");
+            writer.write("\n");
+            writer.write("# Window settings\n");
+            writer.write("window.width=" + properties.getProperty("window.width", DEFAULT_WINDOW_WIDTH) + "\n");
+            writer.write("window.height=" + properties.getProperty("window.height", DEFAULT_WINDOW_HEIGHT) + "\n");
+            writer.write("window.title=" + properties.getProperty("window.title", DEFAULT_WINDOW_TITLE) + "\n");
+            writer.write("\n");
+            writer.write("# Colors (RGB format: red,green,blue where each value is 0-255)\n");
+            writer.write("# Highlight color for selected rows in the file table\n");
+            writer.write("highlight.color=" + properties.getProperty("highlight.color", DEFAULT_HIGHLIGHT_COLOR) + "\n");
+            writer.write("\n");
+            writer.write("# Console area colors\n");
+            writer.write("console.background.color=" + properties.getProperty("console.background.color", DEFAULT_CONSOLE_BG_COLOR) + "\n");
+            writer.write("console.text.color=" + properties.getProperty("console.text.color", DEFAULT_CONSOLE_TEXT_COLOR) + "\n");
+            writer.write("console.border.color=" + properties.getProperty("console.border.color", DEFAULT_CONSOLE_BORDER_COLOR) + "\n");
+            writer.write("\n");
+            writer.write("# Font settings\n");
+            writer.write("# Available fonts: Monospaced, SansSerif, Serif, Dialog, DialogInput\n");
+            writer.write("\n");
+            writer.write("# Console font (for log output area)\n");
+            writer.write("console.font.name=" + properties.getProperty("console.font.name", DEFAULT_CONSOLE_FONT_NAME) + "\n");
+            writer.write("console.font.size=" + properties.getProperty("console.font.size", DEFAULT_CONSOLE_FONT_SIZE) + "\n");
+            writer.write("\n");
+            writer.write("# UI font (for menus, buttons, table, and other UI elements)\n");
+            writer.write("ui.font.name=" + properties.getProperty("ui.font.name", DEFAULT_UI_FONT_NAME) + "\n");
+            writer.write("ui.font.size=" + properties.getProperty("ui.font.size", DEFAULT_UI_FONT_SIZE) + "\n");
+            writer.write("\n");
+            writer.write("# Table settings\n");
+            writer.write("# Row height in pixels\n");
+            writer.write("table.row.height=" + properties.getProperty("table.row.height", DEFAULT_TABLE_ROW_HEIGHT) + "\n");
+            writer.write("\n");
+            writer.write("# Split pane settings\n");
+            writer.write("# Ratio between table and console (0.0-1.0, where 0.7 means 70% for table, 30% for console)\n");
+            writer.write("split.pane.ratio=" + properties.getProperty("split.pane.ratio", DEFAULT_SPLIT_PANE_RATIO) + "\n");
         }
     }
 
