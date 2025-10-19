@@ -1,13 +1,17 @@
 package org.example.ui;
 
 import org.example.config.UIConfig;
+import org.example.model.FileTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 public class FileTable extends JTable {
     private UIConfig config;
@@ -85,6 +89,33 @@ public class FileTable extends JTable {
         setRowHeight(config.getTableRowHeight());
         invalidate();
         repaint();
+    }
+
+    /**
+     * Get selected files in the current view order (respecting sorting).
+     * This ensures files are processed in the order they appear in the table.
+     */
+    public List<File> getSelectedFilesInViewOrder() {
+        List<File> selectedFiles = new ArrayList<>();
+        FileTableModel model = (FileTableModel) getModel();
+
+        // Iterate through rows in view order (as they appear in the sorted table)
+        for (int viewRow = 0; viewRow < getRowCount(); viewRow++) {
+            // Convert view row to model row
+            int modelRow = convertRowIndexToModel(viewRow);
+
+            // Check if this row is selected
+            Boolean isSelected = (Boolean) model.getValueAt(modelRow, 0);
+            if (isSelected != null && isSelected) {
+                // Get the file from the Name column (column 2)
+                String fileName = (String) model.getValueAt(modelRow, 2);
+                // We need to get the actual File object from the model
+                // For now, we'll need to add a method to FileTableModel to get the File by row index
+                selectedFiles.add(model.getFileAtRow(modelRow));
+            }
+        }
+
+        return selectedFiles;
     }
 
     private class CheckedRowRenderer extends DefaultTableCellRenderer {

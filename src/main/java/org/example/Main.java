@@ -308,7 +308,8 @@ public class Main extends JFrame {
     }
 
     private void processFiles() {
-        List<File> selectedFiles = tableModel.getSelectedFiles();
+        // Get selected files in the current view order (respecting table sorting)
+        List<File> selectedFiles = fileTable.getSelectedFilesInViewOrder();
         if (validateSelectedFiles(selectedFiles)) return;
 
         FileAction selectedAction = (FileAction) actionComboBox.getSelectedItem();

@@ -101,6 +101,17 @@ public class FileTableModel extends AbstractTableModel {
         return selectedFiles;
     }
 
+    /**
+     * Get the File object at the specified row index.
+     * Used by FileTable to retrieve files in view order.
+     */
+    public File getFileAtRow(int rowIndex) {
+        if (rowIndex >= 0 && rowIndex < rows.size()) {
+            return rows.get(rowIndex).getFile();
+        }
+        return null;
+    }
+
     private String formatFileSize(long size) {
         if (size < 1024) {
             return size + " B";
