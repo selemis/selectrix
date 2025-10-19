@@ -18,7 +18,7 @@ public class Main extends JFrame {
     private JTable fileTable;
     private FileTableModel tableModel;
     private JComboBox<FileAction> actionComboBox;
-    private List<FileAction> availableActions;
+    private final List<FileAction> availableActions;
     private JTextArea consoleArea;
 
     public Main() {

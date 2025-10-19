@@ -31,3 +31,34 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+// Task to build the unzip plugin as a standalone JAR
+task unzipPluginJar(type: Jar) {
+    archiveBaseName = 'unzip-plugin'
+    archiveVersion = '1.0'
+
+    // Include only the UnzipFileAction class and the service loader configuration
+    from(sourceSets.main.output) {
+        include 'org/example/plugin/FileAction.class'
+        include 'org/example/plugin/ActionLogger.class'
+        include 'org/example/plugin/impl/UnzipFileAction.class'
+        include 'org/example/plugin/impl/UnzipFileAction$*.class' // Inner classes if any
+        include 'META-INF/services/org.example.plugin.FileAction'
+    }
+
+    // Set the destination directory
+    destinationDirectory = file("${projectDir}/plugins")
+
+    manifest {
+        attributes(
+            'Implementation-Title': 'Unzip Plugin',
+            'Implementation-Version': archiveVersion,
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date(),
+            'Built-JDK': System.getProperty('java.version')
+        )
+    }
+}
+
+// Make the plugin jar depend on compilation
+unzipPluginJar.dependsOn classes
