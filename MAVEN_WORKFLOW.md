@@ -43,9 +43,9 @@ cd /path/to/your-plugin
 ./gradlew publishToMavenLocal
 ```
 
-**Example for unzip-plugin:**
+**Example (UnzipPlugin project):**
 - **Group ID:** `org.example.plugins`
-- **Artifact ID:** `unzip-plugin`
+- **Artifact ID:** `unzip-plugin` (lowercase per Maven conventions)
 - **Version:** `1.0`
 - **Location:** `~/.m2/repository/org/example/plugins/unzip-plugin/1.0/`
 

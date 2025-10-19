@@ -201,7 +201,7 @@ public interface ActionLogger {
 
 ## Example Plugins
 
-See the `unzip-plugin` project as a complete example of an external plugin implementation.
+See the `UnzipPlugin` project as a complete example of an external plugin implementation.
 
 ## Troubleshooting
 
