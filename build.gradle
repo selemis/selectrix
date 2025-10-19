@@ -3,6 +3,7 @@ plugins {
     id 'groovy'
     id 'maven-publish'
     id 'application'
+    id 'jacoco'
 }
 
 group = 'org.example'
@@ -50,6 +51,39 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport // Generate report after tests run
+}
+
+// JaCoCo Configuration
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+jacocoTestReport {
+    dependsOn test // Tests are required to run before generating the report
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+// Custom task to run tests and show coverage report location
+tasks.register('testWithCoverage') {
+    dependsOn test, jacocoTestReport
+    description = 'Runs tests and generates code coverage report'
+    group = 'verification'
+
+    doLast {
+        println ""
+        println "=========================================="
+        println "Code Coverage Report Generated!"
+        println "=========================================="
+        println "HTML Report: ${project.buildDir}/reports/jacoco/test/html/index.html"
+        println "XML Report:  ${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        println "=========================================="
+    }
 }
 
 // Task to build the plugin API JAR (only interfaces needed for plugin development)

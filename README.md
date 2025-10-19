@@ -469,6 +469,45 @@ The distribution file will be created at:
 
 The project uses Spock Framework for testing. Tests are located in `src/test/groovy/`.
 
+### Running Tests
+
+```bash
+# Run all tests
+./gradlew test
+
+# Run tests with code coverage report
+./gradlew testWithCoverage
+```
+
+### Code Coverage
+
+The project uses JaCoCo for code coverage analysis. After running tests, coverage reports are automatically generated.
+
+**Viewing Coverage Reports:**
+
+- **HTML Report**: Open `build/reports/jacoco/test/html/index.html` in your browser
+  - Provides a visual, interactive report with line-by-line coverage
+  - Shows coverage by package, class, and method
+  - Color-coded: green (covered), red (not covered), yellow (partially covered)
+
+- **XML Report**: `build/reports/jacoco/test/jacocoTestReport.xml`
+  - Machine-readable format for CI/CD integration
+  - Can be used with SonarQube, Jenkins, or other analysis tools
+
+**Understanding Coverage Metrics:**
+
+- **Instructions**: Individual Java bytecode instructions
+- **Branches**: Decision points (if/else, switch, loops)
+- **Lines**: Source code lines
+- **Methods**: Individual methods/functions
+- **Classes**: Number of classes
+
+**Tips for Improving Coverage:**
+
+- Focus on testing business logic, utility classes, and models
+- UI components (especially Swing classes) are typically harder to test
+- Aim for meaningful tests rather than just high coverage numbers
+
 ## GUI Console
 
 The application includes an integrated console at the bottom of the window that displays real-time output from plugins.
