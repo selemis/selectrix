@@ -2,10 +2,17 @@ plugins {
     id 'java'
     id 'groovy'
     id 'maven-publish'
+    id 'application'
 }
 
 group = 'org.example'
 version = '1.0-SNAPSHOT'
+
+// Application plugin configuration
+application {
+    mainClass = 'org.example.Main'
+    applicationName = 'FileSelector'
+}
 
 repositories {
     mavenLocal()
@@ -144,4 +151,29 @@ publishing {
 // Make publishing depend on the API JAR being built
 tasks.named('publishPluginApiPublicationToMavenLocal') {
     dependsOn pluginApiJar
+}
+
+// Distribution configuration
+distributions {
+    main {
+        contents {
+            // Include the external plugins directory
+            from('plugins') {
+                into 'plugins'
+            }
+            // Include README if it exists
+            from('.') {
+                include 'README.md'
+            }
+        }
+    }
+}
+
+// Ensure plugins are copied before creating distribution
+tasks.named('distZip') {
+    dependsOn tasks.named('copyExternalPlugins')
+}
+
+tasks.named('distTar') {
+    dependsOn tasks.named('copyExternalPlugins')
 }

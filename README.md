@@ -362,7 +362,71 @@ FileSelector/
 └── README.md                                    # This file
 ```
 
-## Building the Project
+## For End Users (No Development Environment Required)
+
+### Requirements
+
+- Java Runtime Environment (JRE) 11 or higher
+  - **Windows**: Download from [Adoptium](https://adoptium.net/) or [Oracle](https://www.oracle.com/java/technologies/downloads/)
+  - **macOS**: Download from [Adoptium](https://adoptium.net/) or use `brew install openjdk@11`
+  - **Linux**: Use your package manager (e.g., `sudo apt install openjdk-11-jre`)
+
+### Getting the Application
+
+**Option 1: Download Pre-built Distribution**
+- Ask the developer for the `FileSelector-1.0-SNAPSHOT.zip` file
+
+**Option 2: Build from Source** (see Developer section below)
+
+### Installation
+
+1. Extract the ZIP file to your desired location
+
+2. The extracted folder contains:
+   ```
+   FileSelector/
+   ├── bin/
+   │   ├── FileSelector       (Linux/Mac launcher)
+   │   └── FileSelector.bat   (Windows launcher)
+   ├── lib/
+   │   └── (application JARs)
+   ├── plugins/
+   │   └── (plugin JARs)
+   └── README.md
+   ```
+
+### Running the Application
+
+**Windows:**
+- Double-click `bin/FileSelector.bat`
+- Or open Command Prompt and run:
+  ```
+  cd path\to\FileSelector
+  bin\FileSelector.bat
+  ```
+
+**Linux/macOS:**
+- Open Terminal and run:
+  ```bash
+  cd path/to/FileSelector
+  chmod +x bin/FileSelector  # First time only
+  ./bin/FileSelector
+  ```
+
+### Troubleshooting
+
+**Application won't start:**
+- Verify Java is installed: `java -version`
+- Ensure Java 11 or higher is installed
+- On Linux/Mac, ensure the launcher script is executable: `chmod +x bin/FileSelector`
+
+**Plugins not loading:**
+- Check that plugin JARs are in the `plugins/` directory
+- Check console output for error messages
+
+## For Developers
+
+### Building the Project
 
 ```bash
 # Build the project
@@ -373,9 +437,30 @@ FileSelector/
 
 # Run tests
 ./gradlew test
+
+# Create distribution ZIP (for sharing with others)
+./gradlew distZip
+
+# Create distribution TAR
+./gradlew distTar
 ```
 
-## Requirements
+The distribution file will be created at:
+- **ZIP**: `build/distributions/FileSelector-1.0-SNAPSHOT.zip`
+- **TAR**: `build/distributions/FileSelector-1.0-SNAPSHOT.tar`
+
+### Sharing with Non-Developers
+
+1. Build the distribution:
+   ```bash
+   ./gradlew distZip
+   ```
+
+2. Share the ZIP file from `build/distributions/`
+
+3. Recipients only need Java installed (no Gradle or IDE required)
+
+### Development Requirements
 
 - Java 17 or later
 - Gradle 8.14 or later

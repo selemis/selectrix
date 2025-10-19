@@ -6,6 +6,7 @@ import org.example.plugin.impl.MoveFileAction;
 import org.example.plugin.impl.PrintFilenameAction;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -18,6 +19,41 @@ import java.util.ServiceLoader;
  */
 public class PluginLoader {
     private static final String PLUGINS_DIR = "plugins";
+
+    /**
+     * Gets the plugins directory, looking for it relative to the application location.
+     * First tries to find it relative to the JAR file location (for distributions),
+     * then falls back to current working directory (for development).
+     *
+     * @return File object representing the plugins directory
+     */
+    private static File getPluginsDirectory() {
+        // Try to get the application's installation directory
+        try {
+            // Get the location of the PluginLoader class
+            File jarFile = new File(PluginLoader.class.getProtectionDomain()
+                    .getCodeSource().getLocation().toURI());
+
+            File appDir;
+            if (jarFile.isFile()) {
+                // Running from JAR in distribution: jar is in lib/ folder
+                // So plugins directory is ../plugins relative to lib/
+                appDir = jarFile.getParentFile().getParentFile();
+            } else {
+                // Running from IDE/build directory
+                appDir = new File(System.getProperty("user.dir"));
+            }
+
+            File pluginsDir = new File(appDir, PLUGINS_DIR);
+            System.out.println("Looking for plugins in: " + pluginsDir.getAbsolutePath());
+            return pluginsDir;
+
+        } catch (Exception e) {
+            // Fallback to current working directory
+            System.out.println("Could not determine application directory, using working directory");
+            return new File(PLUGINS_DIR);
+        }
+    }
 
     /**
      * Loads all available plugins.
@@ -48,10 +84,10 @@ public class PluginLoader {
      */
     private static List<FileAction> loadExternalPlugins() {
         List<FileAction> externalPlugins = new ArrayList<>();
-        File pluginsDir = new File(PLUGINS_DIR);
+        File pluginsDir = getPluginsDirectory();
 
         if (!pluginsDir.exists() || !pluginsDir.isDirectory()) {
-            System.out.println("Plugins directory not found: " + PLUGINS_DIR);
+            System.out.println("Plugins directory not found: " + pluginsDir.getAbsolutePath());
             return externalPlugins;
         }
 
