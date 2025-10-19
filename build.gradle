@@ -5,6 +5,7 @@ plugins {
     id 'application'
     id 'jacoco'
     id 'pmd'
+    id 'com.github.spotbugs' version '6.0.7'
 }
 
 group = 'org.example'
@@ -129,10 +130,64 @@ tasks.register('pmdCheck') {
     }
 }
 
+// SpotBugs Configuration
+spotbugs {
+    effort = 'max'
+    reportLevel = 'medium'
+    ignoreFailures = true
+}
+
+spotbugsMain {
+    reports {
+        html {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/main.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+        xml {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/main.xml")
+        }
+    }
+}
+
+spotbugsTest {
+    reports {
+        html {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/test.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+        xml {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/test.xml")
+        }
+    }
+}
+
+// Custom task to run SpotBugs and show report location
+tasks.register('spotbugsCheck') {
+    dependsOn spotbugsMain, spotbugsTest
+    description = 'Runs SpotBugs static bug detection'
+    group = 'verification'
+
+    doLast {
+        println ""
+        println "=========================================="
+        println "SpotBugs Analysis Complete!"
+        println "=========================================="
+        println "Main HTML Report: ${project.buildDir}/reports/spotbugs/main.html"
+        println "Main XML Report:  ${project.buildDir}/reports/spotbugs/main.xml"
+        println "Test HTML Report: ${project.buildDir}/reports/spotbugs/test.html"
+        println "Test XML Report:  ${project.buildDir}/reports/spotbugs/test.xml"
+        println "=========================================="
+    }
+}
+
 // Task to run all quality checks
 tasks.register('qualityCheck') {
-    dependsOn test, jacocoTestReport, pmdMain, pmdTest
-    description = 'Runs all quality checks (tests, coverage, PMD)'
+    dependsOn test, jacocoTestReport, pmdMain, pmdTest, spotbugsMain, spotbugsTest
+    description = 'Runs all quality checks (tests, coverage, PMD, SpotBugs)'
     group = 'verification'
 
     doLast {
@@ -140,8 +195,9 @@ tasks.register('qualityCheck') {
         println "=========================================="
         println "All Quality Checks Complete!"
         println "=========================================="
-        println "Coverage Report: ${project.buildDir}/reports/jacoco/test/html/index.html"
-        println "PMD Report:      ${project.buildDir}/reports/pmd/main.html"
+        println "Coverage Report:  ${project.buildDir}/reports/jacoco/test/html/index.html"
+        println "PMD Report:       ${project.buildDir}/reports/pmd/main.html"
+        println "SpotBugs Report:  ${project.buildDir}/reports/spotbugs/main.html"
         println "=========================================="
     }
 }

@@ -568,6 +568,87 @@ Edit `config/pmd/ruleset.xml` to:
 - Configure rule parameters
 - Exclude rules that don't fit your project
 
+### Bug Detection (SpotBugs)
+
+The project uses SpotBugs (successor to FindBugs) to detect potential bugs in Java bytecode.
+
+**Running SpotBugs:**
+
+```bash
+# Run SpotBugs analysis
+./gradlew spotbugsCheck
+
+# Run all quality checks (tests, coverage, PMD, and SpotBugs)
+./gradlew qualityCheck
+```
+
+**Viewing SpotBugs Reports:**
+
+- **HTML Report**: Open `build/reports/spotbugs/main.html` in your browser
+  - Interactive report with bug details and explanations
+  - Grouped by bug category and severity
+  - Includes source code snippets showing the issue
+  - Links to detailed bug pattern descriptions
+
+- **XML Report**: `build/reports/spotbugs/main.xml`
+  - Machine-readable format for CI/CD integration
+  - Compatible with SonarQube, Jenkins, and other tools
+
+**SpotBugs Configuration:**
+
+- **Effort Level**: `max` - Performs thorough analysis (may take longer)
+- **Report Level**: `medium` - Reports medium and high priority bugs
+- **Ignore Failures**: `true` - Won't fail the build on bugs (good for starting out)
+
+**Bug Categories:**
+
+SpotBugs detects issues in the following categories:
+
+- **Correctness**: Probable bugs - violations of expected behavior
+  - Null pointer dereferences
+  - Infinite loops
+  - Incorrect method implementations
+
+- **Bad Practice**: Code that violates recommended practices
+  - Missing null checks
+  - Incorrect equals/hashCode implementations
+  - Ignoring return values
+
+- **Performance**: Code that may perform poorly
+  - Inefficient string concatenation
+  - Unnecessary object creation
+  - Boxing/unboxing issues
+
+- **Multithreaded Correctness**: Thread safety issues
+  - Race conditions
+  - Synchronization problems
+  - Volatile field usage
+
+- **Malicious Code Vulnerability**: Security vulnerabilities
+  - Field exposure
+  - Mutable objects returned
+  - Public static fields
+
+- **Dodgy Code**: Confusing or error-prone code
+  - Dead local stores
+  - Useless control flow
+  - Redundant comparisons
+
+**Understanding Bug Rankings:**
+
+- **Scariest (Rank 1-4)**: Critical issues that should be fixed immediately
+- **Scary (Rank 5-9)**: Important issues that likely indicate bugs
+- **Troubling (Rank 10-14)**: Potential issues worth investigating
+- **Of Concern (Rank 15-20)**: Minor issues or code smells
+
+**Common SpotBugs Issues:**
+
+- **NP_NULL_ON_SOME_PATH**: Possible null pointer dereference
+- **RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE**: Null check after dereference
+- **URF_UNREAD_FIELD**: Field is never read after being written
+- **DM_DEFAULT_ENCODING**: Reliance on default character encoding
+- **EI_EXPOSE_REP**: May expose internal representation
+
 ## GUI Console
 
 The application includes an integrated console at the bottom of the window that displays real-time output from plugins.
