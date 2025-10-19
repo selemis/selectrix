@@ -20,6 +20,7 @@ public class Main extends JFrame {
     private JComboBox<FileAction> actionComboBox;
     private final List<FileAction> availableActions;
     private JTextArea consoleArea;
+    private JButton processFilesButton;
 
     public Main() {
         setTitle("File Selector");
@@ -60,7 +61,7 @@ public class Main extends JFrame {
         JButton deselectAllButton = new JButton("Deselect All");
         deselectAllButton.addActionListener(e -> deselectAll());
 
-        JButton processFilesButton = new JButton("Process Files");
+        processFilesButton = new JButton("Process Files");
         processFilesButton.addActionListener(e -> processFiles());
 
         // Create action combo box with loaded plugins
@@ -190,29 +191,43 @@ public class Main extends JFrame {
         // Create logger for plugins
         ActionLogger logger = new ConsoleLogger();
 
-        // Perform action on each selected file using the plugin
-        logger.info("Processing " + selectedFiles.size() + " file(s) with action: " + selectedAction.getActionName());
-        int successCount = 0;
-        int errorCount = 0;
+        // Disable the process button during execution
+        processFilesButton.setEnabled(false);
 
-        for (File file : selectedFiles) {
-            try {
-                selectedAction.execute(file, logger);
-                successCount++;
-            } catch (Exception e) {
-                errorCount++;
-                logger.error("Error processing " + file.getName() + ": " + e.getMessage(), e);
+        // Run processing in background thread
+        final FileAction action = selectedAction;
+        new Thread(() -> {
+            logger.info("Processing " + selectedFiles.size() + " file(s) with action: " + action.getActionName());
+            int successCount = 0;
+            int errorCount = 0;
+
+            for (File file : selectedFiles) {
+                try {
+                    action.execute(file, logger);
+                    successCount++;
+                } catch (Exception e) {
+                    errorCount++;
+                    logger.error("Error processing " + file.getName() + ": " + e.getMessage(), e);
+                }
             }
-        }
 
-        logger.info("Processing complete. Success: " + successCount + ", Errors: " + errorCount);
+            logger.info("Processing complete. Success: " + successCount + ", Errors: " + errorCount);
 
-        if (errorCount > 0) {
-            JOptionPane.showMessageDialog(this,
-                "Processing completed with errors.\nSuccess: " + successCount + "\nErrors: " + errorCount,
-                "Processing Result",
-                JOptionPane.WARNING_MESSAGE);
-        }
+            final int finalSuccessCount = successCount;
+            final int finalErrorCount = errorCount;
+
+            // Re-enable the process button on the UI thread
+            SwingUtilities.invokeLater(() -> {
+                processFilesButton.setEnabled(true);
+
+                if (finalErrorCount > 0) {
+                    JOptionPane.showMessageDialog(Main.this,
+                        "Processing completed with errors.\nSuccess: " + finalSuccessCount + "\nErrors: " + finalErrorCount,
+                        "Processing Result",
+                        JOptionPane.WARNING_MESSAGE);
+                }
+            });
+        }).start();
     }
 
     // Logger implementation that writes to the console area
