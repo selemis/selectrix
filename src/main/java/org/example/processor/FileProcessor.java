@@ -2,6 +2,7 @@ package org.example.processor;
 
 import org.example.plugin.ActionLogger;
 import org.example.plugin.FileAction;
+import org.example.plugin.ProcessingContext;
 
 import java.io.File;
 import java.util.List;
@@ -38,15 +39,30 @@ public class FileProcessor {
 
         int successCount = 0;
         int errorCount = 0;
+        ProcessingContext context = null;
 
-        for (File file : files) {
-            try {
-                action.execute(file, logger);
-                successCount++;
-            } catch (Exception e) {
-                errorCount++;
-                logger.error("Error processing " + file.getName() + ": " + e.getMessage(), e);
+        try {
+            // Phase 1: Before processing
+            context = action.beforeProcessing(logger);
+
+            // Phase 2: Process each file
+            for (File file : files) {
+                try {
+                    action.execute(file, context, logger);
+                    successCount++;
+                } catch (Exception e) {
+                    errorCount++;
+                    logger.error("Error processing " + file.getName() + ": " + e.getMessage(), e);
+                }
             }
+
+            // Phase 3: After processing
+            action.afterProcessing(context, logger);
+
+        } catch (Exception e) {
+            // Error in before/after processing
+            logger.error("Error in processing lifecycle: " + e.getMessage(), e);
+            errorCount++;
         }
 
         logger.info("Processing complete. Success: " + successCount + ", Errors: " + errorCount);

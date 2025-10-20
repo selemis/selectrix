@@ -252,12 +252,14 @@ task pluginApiJar(type: Jar) {
     from(sourceSets.main.output) {
         include 'org/example/plugin/FileAction.class'
         include 'org/example/plugin/ActionLogger.class'
+        include 'org/example/plugin/ProcessingContext.class'
     }
 
     // Also include source files for plugin developers
     from(sourceSets.main.java) {
         include 'org/example/plugin/FileAction.java'
         include 'org/example/plugin/ActionLogger.java'
+        include 'org/example/plugin/ProcessingContext.java'
         into 'sources'
     }
 
