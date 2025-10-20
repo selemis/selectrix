@@ -115,6 +115,24 @@ public class FileTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    public void setFilesSelected(boolean selected) {
+        for (FileRow row : rows) {
+            if (!row.getFile().isDirectory()) {
+                row.setSelected(selected);
+            }
+        }
+        fireTableDataChanged();
+    }
+
+    public void setDirectoriesSelected(boolean selected) {
+        for (FileRow row : rows) {
+            if (row.getFile().isDirectory()) {
+                row.setSelected(selected);
+            }
+        }
+        fireTableDataChanged();
+    }
+
     public List<File> getSelectedFiles() {
         List<File> selectedFiles = new ArrayList<>();
         for (FileRow row : rows) {

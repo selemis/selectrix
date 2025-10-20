@@ -28,6 +28,8 @@ public class Main extends JFrame {
     private JMenuBar menuBar;
     private JButton selectAllButton;
     private JButton deselectAllButton;
+    private JButton selectFilesButton;
+    private JButton selectDirsButton;
     private List<JLabel> labels;
     private FileProcessor fileProcessor;
 
@@ -80,6 +82,8 @@ public class Main extends JFrame {
 
         buttonPanel.add(selectAllButton);
         buttonPanel.add(deselectAllButton);
+        buttonPanel.add(selectFilesButton);
+        buttonPanel.add(selectDirsButton);
         buttonPanel.add(createActionLabel(uiFont));
         buttonPanel.add(actionComboBox);
         buttonPanel.add(processFilesButton);
@@ -127,6 +131,14 @@ public class Main extends JFrame {
         deselectAllButton = new JButton("Deselect All");
         deselectAllButton.setFont(uiFont);
         deselectAllButton.addActionListener(e -> deselectAll());
+
+        selectFilesButton = new JButton("Select Files");
+        selectFilesButton.setFont(uiFont);
+        selectFilesButton.addActionListener(e -> selectFiles());
+
+        selectDirsButton = new JButton("Select Dirs");
+        selectDirsButton.setFont(uiFont);
+        selectDirsButton.addActionListener(e -> selectDirs());
 
         processFilesButton = new JButton("Process Files");
         processFilesButton.setFont(uiFont);
@@ -335,6 +347,14 @@ public class Main extends JFrame {
 
     private void deselectAll() {
         tableModel.setAllSelected(false);
+    }
+
+    private void selectFiles() {
+        tableModel.setFilesSelected(true);
+    }
+
+    private void selectDirs() {
+        tableModel.setDirectoriesSelected(true);
     }
 
     private void processFiles() {
