@@ -1,8 +1,5 @@
 package org.example.plugin;
 
-import org.example.plugin.impl.CopyFileAction;
-import org.example.plugin.impl.DeleteFileAction;
-import org.example.plugin.impl.MoveFileAction;
 import org.example.plugin.impl.PrintFilenameAction;
 
 import java.io.File;
@@ -64,11 +61,8 @@ public class PluginLoader {
     public static List<FileAction> loadPlugins() {
         List<FileAction> plugins = new ArrayList<>();
 
-        // Load built-in plugins
+        // Load built-in plugins (only Print for debugging)
         plugins.add(new PrintFilenameAction());
-        plugins.add(new CopyFileAction());
-        plugins.add(new MoveFileAction());
-        plugins.add(new DeleteFileAction());
 
         // Load external plugins from plugins directory
         plugins.addAll(loadExternalPlugins());
