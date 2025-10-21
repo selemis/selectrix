@@ -1,6 +1,6 @@
-package org.example.ui;
+package com.selectrix.ui;
 
-import org.example.config.UIConfig;
+import com.selectrix.config.UIConfig;
 
 import javax.swing.*;
 import java.awt.*;

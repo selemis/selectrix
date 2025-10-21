@@ -1,4 +1,4 @@
-package org.example.plugin;
+package com.selectrix.plugin;
 
 /**
  * Logger interface for plugins to output messages to the GUI console.

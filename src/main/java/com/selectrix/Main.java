@@ -1,14 +1,14 @@
-package org.example;
+package com.selectrix;
 
-import org.example.config.UIConfig;
-import org.example.logger.ConsoleLogger;
-import org.example.model.FileTableModel;
-import org.example.plugin.ActionLogger;
-import org.example.plugin.FileAction;
-import org.example.plugin.PluginLoader;
-import org.example.processor.FileProcessor;
-import org.example.ui.FileTable;
-import org.example.ui.PropertiesEditorDialog;
+import com.selectrix.config.UIConfig;
+import com.selectrix.logger.ConsoleLogger;
+import com.selectrix.model.FileTableModel;
+import com.selectrix.plugin.ActionLogger;
+import com.selectrix.plugin.FileAction;
+import com.selectrix.plugin.PluginLoader;
+import com.selectrix.processor.FileProcessor;
+import com.selectrix.ui.FileTable;
+import com.selectrix.ui.PropertiesEditorDialog;
 
 import javax.swing.*;
 import java.awt.*;

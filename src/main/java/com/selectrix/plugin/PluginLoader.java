@@ -1,6 +1,6 @@
-package org.example.plugin;
+package com.selectrix.plugin;
 
-import org.example.plugin.impl.PrintFilenameAction;
+import com.selectrix.plugin.impl.PrintFilenameAction;
 
 import java.io.File;
 import java.net.URISyntaxException;

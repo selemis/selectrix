@@ -1,4 +1,4 @@
-package org.example.plugin;
+package com.selectrix.plugin;
 
 /**
  * Base class for plugin processing context.

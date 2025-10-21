@@ -9,13 +9,13 @@ plugins {
     id 'org.sonarqube' version '5.1.0.4882'
 }
 
-group = 'org.example'
-version = '1.0-SNAPSHOT'
+group = 'com.selectrix'
+version = '1.0.0-SNAPSHOT'
 
 // Application plugin configuration
 application {
-    mainClass = 'org.example.Main'
-    applicationName = 'FileSelector'
+    mainClass = 'com.selectrix.Main'
+    applicationName = 'Selectrix'
 }
 
 repositories {
@@ -49,9 +49,9 @@ dependencies {
     testImplementation 'org.codehaus.groovy:groovy-all:3.0.21'
 
     // External plugins (fetched from Maven Local)
-    externalPlugins 'org.example.plugins:unzip-plugin:1.0'
-    externalPlugins 'org.example.plugins:flatten-plugin:1.0'
-    externalPlugins 'org.example.plugins:pdf-concatenate-plugin:1.0'
+    externalPlugins 'com.selectrix.plugins:unzip-plugin:1.0'
+    externalPlugins 'com.selectrix.plugins:flatten-plugin:1.0'
+    externalPlugins 'com.selectrix.plugins:pdf-concatenate-plugin:1.0'
 }
 
 test {
@@ -190,8 +190,8 @@ tasks.register('spotbugsCheck') {
 // SonarQube Configuration
 sonar {
     properties {
-        property 'sonar.projectKey', 'fileselector'
-        property 'sonar.projectName', 'File Selector'
+        property 'sonar.projectKey', 'selectrix'
+        property 'sonar.projectName', 'Selectrix'
         property 'sonar.projectVersion', version
         property 'sonar.sourceEncoding', 'UTF-8'
 
@@ -246,21 +246,21 @@ tasks.register('qualityCheck') {
 
 // Task to build the plugin API JAR (only interfaces needed for plugin development)
 task pluginApiJar(type: Jar) {
-    archiveBaseName = 'file-selector-plugin-api'
+    archiveBaseName = 'selectrix-plugin-api'
     archiveVersion = '1.0'
 
     // Include only the plugin API interfaces
     from(sourceSets.main.output) {
-        include 'org/example/plugin/FileAction.class'
-        include 'org/example/plugin/ActionLogger.class'
-        include 'org/example/plugin/ProcessingContext.class'
+        include 'com/selectrix/plugin/FileAction.class'
+        include 'com/selectrix/plugin/ActionLogger.class'
+        include 'com/selectrix/plugin/ProcessingContext.class'
     }
 
     // Also include source files for plugin developers
     from(sourceSets.main.java) {
-        include 'org/example/plugin/FileAction.java'
-        include 'org/example/plugin/ActionLogger.java'
-        include 'org/example/plugin/ProcessingContext.java'
+        include 'com/selectrix/plugin/FileAction.java'
+        include 'com/selectrix/plugin/ActionLogger.java'
+        include 'com/selectrix/plugin/ProcessingContext.java'
         into 'sources'
     }
 
@@ -269,12 +269,12 @@ task pluginApiJar(type: Jar) {
 
     manifest {
         attributes(
-            'Implementation-Title': 'File Selector Plugin API',
+            'Implementation-Title': 'Selectrix Plugin API',
             'Implementation-Version': archiveVersion,
             'Built-By': System.getProperty('user.name'),
             'Built-Date': new Date(),
             'Built-JDK': System.getProperty('java.version'),
-            'Specification-Title': 'File Selector Plugin API',
+            'Specification-Title': 'Selectrix Plugin API',
             'Specification-Version': archiveVersion
         )
     }
@@ -314,7 +314,7 @@ processResources.dependsOn copyExternalPlugins
 publishing {
     publications {
         pluginApi(MavenPublication) {
-            groupId = 'org.example.fileselector'
+            groupId = 'com.selectrix'
             artifactId = 'plugin-api'
             version = '1.0'
 
@@ -324,13 +324,13 @@ publishing {
             }
 
             pom {
-                name = 'File Selector Plugin API'
-                description = 'Plugin API for File Selector application'
+                name = 'Selectrix Plugin API'
+                description = 'Plugin API for Selectrix application'
 
                 developers {
                     developer {
-                        id = 'fileselector'
-                        name = 'File Selector Team'
+                        id = 'selectrix'
+                        name = 'Selectrix Team'
                     }
                 }
             }

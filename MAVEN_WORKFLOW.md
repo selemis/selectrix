@@ -1,6 +1,6 @@
 # Maven Local Workflow Guide
 
-This guide explains the Maven Local workflow for managing the File Selector Plugin API.
+This guide explains the Maven Local workflow for managing the Selectrix Plugin API.
 
 ## Overview
 
@@ -13,20 +13,20 @@ Both the Plugin API and external plugins are managed through Maven Local (`~/.m2
 
 ## Publishing the Plugin API
 
-### From FileSelector Project
+### From Selectrix Project
 
 Publish the Plugin API to Maven Local:
 
 ```bash
-cd /path/to/FileSelector
+cd /path/to/Selectrix
 ./gradlew publishPluginApiPublicationToMavenLocal
 ```
 
 **Published artifact:**
-- **Group ID:** `org.example.fileselector`
+- **Group ID:** `com.selectrix.selectrix`
 - **Artifact ID:** `plugin-api`
 - **Version:** `1.0`
-- **Location:** `~/.m2/repository/org/example/fileselector/plugin-api/1.0/`
+- **Location:** `~/.m2/repository/org/example/selectrix/plugin-api/1.0/`
 
 This needs to be done:
 - **Once** when setting up plugin development
@@ -44,35 +44,35 @@ cd /path/to/your-plugin
 ```
 
 **Example (UnzipPlugin project):**
-- **Group ID:** `org.example.plugins`
+- **Group ID:** `com.selectrix.plugins`
 - **Artifact ID:** `unzip-plugin` (lowercase per Maven conventions)
 - **Version:** `1.0`
 - **Location:** `~/.m2/repository/org/example/plugins/unzip-plugin/1.0/`
 
-## Using Plugins in FileSelector
+## Using Plugins in Selectrix
 
 ### Declaring Plugin Dependencies
 
-In FileSelector's `build.gradle`, add plugins to the `externalPlugins` configuration:
+In Selectrix's `build.gradle`, add plugins to the `externalPlugins` configuration:
 
 ```gradle
 dependencies {
     // External plugins (fetched from Maven Local)
-    externalPlugins 'org.example.plugins:unzip-plugin:1.0'
-    externalPlugins 'org.example.plugins:another-plugin:1.0'
+    externalPlugins 'com.selectrix.plugins:unzip-plugin:1.0'
+    externalPlugins 'com.selectrix.plugins:another-plugin:1.0'
     // Add more plugins as needed
 }
 ```
 
 ### Automatic Plugin Resolution
 
-When you build FileSelector, the `copyExternalPlugins` task automatically:
+When you build Selectrix, the `copyExternalPlugins` task automatically:
 1. Resolves plugin dependencies from Maven Local
 2. Cleans the `plugins/` directory
 3. Copies all declared plugins to `plugins/`
 
 ```bash
-cd /path/to/FileSelector
+cd /path/to/Selectrix
 ./gradlew build  # Automatically copies plugins
 # or
 ./gradlew copyExternalPlugins  # Just copy plugins
@@ -89,7 +89,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.example.fileselector:plugin-api:1.0'
+    compileOnly 'com.selectrix.selectrix:plugin-api:1.0'
 }
 ```
 
@@ -106,9 +106,9 @@ Gradle will automatically fetch the API from `~/.m2/repository`.
 
 ### Initial Setup (One-Time)
 
-1. **Publish the Plugin API** (FileSelector maintainers):
+1. **Publish the Plugin API** (Selectrix maintainers):
    ```bash
-   cd /path/to/FileSelector
+   cd /path/to/Selectrix
    ./gradlew publishPluginApiPublicationToMavenLocal
    ```
 
@@ -124,16 +124,16 @@ Gradle will automatically fetch the API from `~/.m2/repository`.
    ./gradlew publishToMavenLocal
    ```
 
-4. **Add plugin to FileSelector** (edit `build.gradle`):
+4. **Add plugin to Selectrix** (edit `build.gradle`):
    ```gradle
    dependencies {
-       externalPlugins 'org.example.plugins:your-plugin:1.0'
+       externalPlugins 'com.selectrix.plugins:your-plugin:1.0'
    }
    ```
 
-5. **Build FileSelector** (automatically copies plugins):
+5. **Build Selectrix** (automatically copies plugins):
    ```bash
-   cd /path/to/FileSelector
+   cd /path/to/Selectrix
    ./gradlew build
    ```
 
@@ -147,11 +147,11 @@ cd /path/to/your-plugin
 # 2. Publish to Maven Local
 ./gradlew publishToMavenLocal
 
-# 3. Rebuild FileSelector (copies updated plugin)
-cd /path/to/FileSelector
+# 3. Rebuild Selectrix (copies updated plugin)
+cd /path/to/Selectrix
 ./gradlew copyExternalPlugins
 
-# 4. Run FileSelector to test
+# 4. Run Selectrix to test
 ./gradlew run  # or launch from IDE
 ```
 
@@ -160,21 +160,21 @@ cd /path/to/FileSelector
 # 1. Make changes to your plugin
 cd /path/to/your-plugin
 
-# 2. Deploy directly to FileSelector (bypasses Maven)
+# 2. Deploy directly to Selectrix (bypasses Maven)
 ./gradlew deployPlugin
 
-# 3. Run FileSelector to test
-cd /path/to/FileSelector
+# 3. Run Selectrix to test
+cd /path/to/Selectrix
 ./gradlew run
 ```
 
 ### When API Changes
 
-If the FileSelector team updates the plugin API:
+If the Selectrix team updates the plugin API:
 
 ```bash
 # 1. Republish API to Maven Local
-cd /path/to/FileSelector
+cd /path/to/Selectrix
 ./gradlew publishPluginApiPublicationToMavenLocal
 
 # 2. Rebuild your plugin
@@ -184,8 +184,8 @@ cd /path/to/your-plugin
 # 3. Republish your plugin
 ./gradlew publishToMavenLocal
 
-# 4. Update FileSelector
-cd /path/to/FileSelector
+# 4. Update Selectrix
+cd /path/to/Selectrix
 ./gradlew copyExternalPlugins
 ```
 
@@ -194,7 +194,7 @@ cd /path/to/FileSelector
 If you prefer not to use Maven Local, you can still build the API as a JAR:
 
 ```bash
-cd /path/to/FileSelector
+cd /path/to/Selectrix
 ./gradlew pluginApiJar
 ```
 
@@ -212,7 +212,7 @@ dependencies {
 
 The Plugin API is published to:
 ```
-~/.m2/repository/org/example/fileselector/plugin-api/1.0/
+~/.m2/repository/org/example/selectrix/plugin-api/1.0/
 ├── plugin-api-1.0.jar
 └── plugin-api-1.0.pom
 ```
@@ -237,11 +237,11 @@ The Plugin API is published to:
 
 ## Troubleshooting
 
-### "Could not find org.example.fileselector:plugin-api:1.0"
+### "Could not find com.selectrix.selectrix:plugin-api:1.0"
 
 The API hasn't been published to Maven Local. Run:
 ```bash
-cd /path/to/FileSelector
+cd /path/to/Selectrix
 ./gradlew publishPluginApiPublicationToMavenLocal
 ```
 
@@ -249,7 +249,7 @@ cd /path/to/FileSelector
 
 Clear Gradle cache and republish:
 ```bash
-cd /path/to/FileSelector
+cd /path/to/Selectrix
 ./gradlew clean publishPluginApiPublicationToMavenLocal
 
 cd /path/to/your-plugin
@@ -259,7 +259,7 @@ cd /path/to/your-plugin
 ### Verify API in Maven Local
 
 ```bash
-ls -l ~/.m2/repository/org/example/fileselector/plugin-api/1.0/
+ls -l ~/.m2/repository/org/example/selectrix/plugin-api/1.0/
 ```
 
 Should show:

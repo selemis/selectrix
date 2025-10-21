@@ -1,6 +1,6 @@
 # Plugin Dependencies Guide
 
-This guide explains how to handle external dependencies in File Selector plugins.
+This guide explains how to handle external dependencies in Selectrix plugins.
 
 ## Current Approach
 
@@ -23,7 +23,7 @@ A Fat JAR bundles all dependencies into a single JAR file, making the plugin sel
 - ✅ No version conflicts between plugins
 - ✅ Easy distribution
 - ✅ Works immediately without classpath configuration
-- ✅ Simple for FileSelector - just load the JAR
+- ✅ Simple for Selectrix - just load the JAR
 
 **Disadvantages:**
 - ⚠️ Larger JAR files
@@ -50,8 +50,8 @@ plugins {
 
 ```gradle
 dependencies {
-    // Plugin API (compile only - provided by FileSelector)
-    compileOnly 'org.example.fileselector:plugin-api:1.0'
+    // Plugin API (compile only - provided by Selectrix)
+    compileOnly 'com.selectrix.selectrix:plugin-api:1.0'
 
     // External dependencies (will be bundled)
     implementation 'org.apache.commons:commons-lang3:3.12.0'
@@ -68,9 +68,9 @@ shadowJar {
     archiveVersion = project.version
     archiveClassifier = ''
 
-    // Exclude the Plugin API (provided by FileSelector)
+    // Exclude the Plugin API (provided by Selectrix)
     dependencies {
-        exclude(dependency('org.example.fileselector:plugin-api:.*'))
+        exclude(dependency('com.selectrix.selectrix:plugin-api:.*'))
     }
 
     // Relocate packages to avoid conflicts (optional but recommended)
@@ -96,7 +96,7 @@ publishing {
             // Publish the shadow JAR instead of regular JAR
             artifact(shadowJar)
 
-            groupId = 'org.example.plugins'
+            groupId = 'com.selectrix.plugins'
             artifactId = 'your-plugin'
             version = project.version
         }
@@ -133,7 +133,7 @@ This renames package names inside your JAR to avoid conflicts.
 
 ### Separate Dependencies Directory
 
-FileSelector could resolve plugin dependencies and copy them to `plugins/libs/`:
+Selectrix could resolve plugin dependencies and copy them to `plugins/libs/`:
 
 ```
 plugins/
@@ -150,7 +150,7 @@ plugins/
 
 ### Shared Dependency Resolution
 
-FileSelector could resolve all plugin dependencies at runtime and create a shared classpath.
+Selectrix could resolve all plugin dependencies at runtime and create a shared classpath.
 
 **Issues:**
 - Very complex implementation
@@ -172,11 +172,11 @@ Always mark the Plugin API as `compileOnly`:
 
 ```gradle
 dependencies {
-    compileOnly 'org.example.fileselector:plugin-api:1.0'  // NOT implementation
+    compileOnly 'com.selectrix.selectrix:plugin-api:1.0'  // NOT implementation
 }
 ```
 
-The Plugin API is provided by FileSelector at runtime.
+The Plugin API is provided by Selectrix at runtime.
 
 ### 3. Document Dependencies
 
@@ -205,7 +205,7 @@ If it's > 10MB, consider:
 
 ### 5. Test in Isolation
 
-Always test your plugin in a clean FileSelector environment to ensure all dependencies are bundled correctly.
+Always test your plugin in a clean Selectrix environment to ensure all dependencies are bundled correctly.
 
 ## Example: Plugin with Dependencies
 
@@ -219,7 +219,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
-group = 'org.example.plugins'
+group = 'com.selectrix.plugins'
 version = '1.0'
 
 repositories {
@@ -228,7 +228,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.example.fileselector:plugin-api:1.0'
+    compileOnly 'com.selectrix.selectrix:plugin-api:1.0'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
 }
 
@@ -243,7 +243,7 @@ shadowJar {
     archiveClassifier = ''
 
     dependencies {
-        exclude(dependency('org.example.fileselector:plugin-api:.*'))
+        exclude(dependency('com.selectrix.selectrix:plugin-api:.*'))
     }
 
     relocate 'org.apache.commons', 'com.example.myplugin.shaded.commons'

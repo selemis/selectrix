@@ -1,4 +1,4 @@
-package org.example.config;
+package com.selectrix.config;
 
 import java.awt.*;
 import java.io.*;
@@ -12,7 +12,7 @@ public class UIConfig {
     // Default values
     private static final String DEFAULT_WINDOW_WIDTH = "1000";
     private static final String DEFAULT_WINDOW_HEIGHT = "600";
-    private static final String DEFAULT_WINDOW_TITLE = "File Selector";
+    private static final String DEFAULT_WINDOW_TITLE = "Selectrix";
     private static final String DEFAULT_HIGHLIGHT_COLOR = "173,216,230";
     private static final String DEFAULT_CONSOLE_BG_COLOR = "240,240,240";
     private static final String DEFAULT_CONSOLE_TEXT_COLOR = "60,60,60";
@@ -44,7 +44,7 @@ public class UIConfig {
     private void loadProperties() {
         // Try to load from user home directory first
         String userHome = System.getProperty("user.home");
-        propertiesFile = new File(userHome, ".fileselector/ui.properties");
+        propertiesFile = new File(userHome, ".selectrix/ui.properties");
 
         // If it doesn't exist, try to load from resources
         if (!propertiesFile.exists()) {
@@ -116,8 +116,8 @@ public class UIConfig {
 
     private void writeFormattedProperties() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(propertiesFile))) {
-            writer.write("# File Selector UI Configuration\n");
-            writer.write("# This file contains customizable UI settings for the File Selector application\n");
+            writer.write("# Selectrix UI Configuration\n");
+            writer.write("# This file contains customizable UI settings for the Selectrix application\n");
             writer.write("\n");
             writer.write("# Window settings\n");
             writer.write("window.width=" + properties.getProperty("window.width", DEFAULT_WINDOW_WIDTH) + "\n");

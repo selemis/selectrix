@@ -1,4 +1,4 @@
-# File Selector
+# Selectrix
 
 A Java Swing application that allows users to browse folders, select multiple files/folders via checkboxes, and perform batch operations on them using a pluggable action system.
 
@@ -56,7 +56,7 @@ The application uses a plugin-based architecture that allows you to extend funct
 All plugins must implement the `FileAction` interface and use the `ActionLogger` for output:
 
 ```java
-package org.example.plugin;
+package com.selectrix.plugin;
 
 import java.io.File;
 
@@ -81,7 +81,7 @@ public interface FileAction {
 ```
 
 ```java
-package org.example.plugin;
+package com.selectrix.plugin;
 
 public interface ActionLogger {
     /**
@@ -107,10 +107,10 @@ public interface ActionLogger {
 
 Create a separate Java project for your plugin.
 
-#### Step 2: Add FileSelector as a Dependency
+#### Step 2: Add Selectrix as a Dependency
 
 You need access to the `FileAction` and `ActionLogger` interfaces. Either:
-- Add the FileSelector project as a dependency
+- Add the Selectrix project as a dependency
 - Copy both `FileAction.java` and `ActionLogger.java` interfaces to your plugin project
 
 #### Step 3: Implement the FileAction Interface
@@ -120,8 +120,8 @@ Example - Creating an "Unzip Files" plugin:
 ```java
 package com.mycompany.plugins;
 
-import org.example.plugin.ActionLogger;
-import org.example.plugin.FileAction;
+import com.selectrix.plugin.ActionLogger;
+import com.selectrix.plugin.FileAction;
 import java.io.File;
 import java.util.zip.ZipFile;
 // ... other imports for unzipping
@@ -162,7 +162,7 @@ public class UnzipAction implements FileAction {
 
 #### Step 4: Create ServiceLoader Configuration
 
-Create a file at: `src/main/resources/META-INF/services/org.example.plugin.FileAction`
+Create a file at: `src/main/resources/META-INF/services/com.selectrix.plugin.FileAction`
 
 Content (one class per line):
 ```
@@ -188,8 +188,8 @@ Build your plugin as a JAR file, including all dependencies:
 
 #### Step 6: Deploy the Plugin
 
-1. Copy the JAR file to the `plugins/` directory in the FileSelector project root
-2. Restart the FileSelector application
+1. Copy the JAR file to the `plugins/` directory in the Selectrix project root
+2. Restart the Selectrix application
 3. Your plugin will automatically appear in the "Action" dropdown!
 
 ### Plugin Dependencies
@@ -214,7 +214,7 @@ plugins {
 }
 
 dependencies {
-    compileOnly files('path/to/FileSelector.jar') // For FileAction interface
+    compileOnly files('path/to/Selectrix.jar') // For FileAction interface
     implementation 'org.apache.commons:commons-compress:1.24.0' // Your dependency
 }
 
@@ -266,7 +266,7 @@ If you create a plugin that uses Apache Commons Compress library:
 
 1. **Provider Declaration**: Plugin JARs contain a special file:
    ```
-   META-INF/services/org.example.plugin.FileAction
+   META-INF/services/com.selectrix.plugin.FileAction
    ```
 
    This file lists all implementations:
@@ -324,7 +324,7 @@ And maintain a registry/config file of all plugin class names.
 
 5. **Discover Implementations**
    - Uses `ServiceLoader.load(FileAction.class, pluginClassLoader)`
-   - ServiceLoader reads `META-INF/services/org.example.plugin.FileAction` from each JAR
+   - ServiceLoader reads `META-INF/services/com.selectrix.plugin.FileAction` from each JAR
    - Instantiates all listed implementations
 
 6. **Populate UI**
@@ -340,7 +340,7 @@ And maintain a registry/config file of all plugin class names.
 ## Project Structure
 
 ```
-FileSelector/
+Selectrix/
 ├── src/
 │   ├── main/
 │   │   └── java/
@@ -374,7 +374,7 @@ FileSelector/
 ### Getting the Application
 
 **Option 1: Download Pre-built Distribution**
-- Ask the developer for the `FileSelector-1.0-SNAPSHOT.zip` file
+- Ask the developer for the `Selectrix-1.0-SNAPSHOT.zip` file
 
 **Option 2: Build from Source** (see Developer section below)
 
@@ -384,10 +384,10 @@ FileSelector/
 
 2. The extracted folder contains:
    ```
-   FileSelector/
+   Selectrix/
    ├── bin/
-   │   ├── FileSelector       (Linux/Mac launcher)
-   │   └── FileSelector.bat   (Windows launcher)
+   │   ├── Selectrix       (Linux/Mac launcher)
+   │   └── Selectrix.bat   (Windows launcher)
    ├── lib/
    │   └── (application JARs)
    ├── plugins/
@@ -398,19 +398,19 @@ FileSelector/
 ### Running the Application
 
 **Windows:**
-- Double-click `bin/FileSelector.bat`
+- Double-click `bin/Selectrix.bat`
 - Or open Command Prompt and run:
   ```
-  cd path\to\FileSelector
-  bin\FileSelector.bat
+  cd path\to\Selectrix
+  bin\Selectrix.bat
   ```
 
 **Linux/macOS:**
 - Open Terminal and run:
   ```bash
-  cd path/to/FileSelector
-  chmod +x bin/FileSelector  # First time only
-  ./bin/FileSelector
+  cd path/to/Selectrix
+  chmod +x bin/Selectrix  # First time only
+  ./bin/Selectrix
   ```
 
 ### Troubleshooting
@@ -418,7 +418,7 @@ FileSelector/
 **Application won't start:**
 - Verify Java is installed: `java -version`
 - Ensure Java 11 or higher is installed
-- On Linux/Mac, ensure the launcher script is executable: `chmod +x bin/FileSelector`
+- On Linux/Mac, ensure the launcher script is executable: `chmod +x bin/Selectrix`
 
 **Plugins not loading:**
 - Check that plugin JARs are in the `plugins/` directory
@@ -452,8 +452,8 @@ FileSelector/
 ```
 
 The distribution file will be created at:
-- **ZIP**: `build/distributions/FileSelector-1.0-SNAPSHOT.zip`
-- **TAR**: `build/distributions/FileSelector-1.0-SNAPSHOT.tar`
+- **ZIP**: `build/distributions/Selectrix-1.0-SNAPSHOT.zip`
+- **TAR**: `build/distributions/Selectrix-1.0-SNAPSHOT.tar`
 
 ### Sharing with Non-Developers
 
@@ -729,12 +729,12 @@ docker logs -f sonarqube
 
 1. Click "Create Project" → "Manually"
 2. Enter project details:
-   - **Project display name**: `File Selector`
-   - **Project key**: `fileselector`
+   - **Project display name**: `Selectrix`
+   - **Project key**: `selectrix`
    - Click "Set Up"
 3. Choose "Locally"
 4. Generate a token:
-   - **Token name**: `fileselector-token`
+   - **Token name**: `selectrix-token`
    - Click "Generate"
    - **IMPORTANT**: Copy the token immediately (you won't see it again!)
 
@@ -753,7 +753,7 @@ docker logs -f sonarqube
 **Step 5: View Results**
 
 1. Go to [http://localhost:9000](http://localhost:9000)
-2. Click on "Projects" → "File Selector"
+2. Click on "Projects" → "Selectrix"
 3. Explore the dashboard showing:
    - 🐛 Bugs and vulnerabilities
    - 💩 Code smells
@@ -836,8 +836,8 @@ SonarQube provides a "Quality Gate" that determines if your code meets minimum s
 **Viewing Results:**
 
 After running the analysis, view the dashboard at:
-- **SonarCloud**: `https://sonarcloud.io/dashboard?id=fileselector`
-- **Local Server**: `http://localhost:9000/dashboard?id=fileselector`
+- **SonarCloud**: `https://sonarcloud.io/dashboard?id=selectrix`
+- **Local Server**: `http://localhost:9000/dashboard?id=selectrix`
 
 **Continuous Integration:**
 
@@ -854,7 +854,7 @@ Add to your CI/CD pipeline (GitHub Actions, Jenkins, GitLab CI):
 **Project Configuration:**
 
 The SonarQube configuration is in `build.gradle`:
-- Project key: `fileselector`
+- Project key: `selectrix`
 - Automatically imports JaCoCo, PMD, and SpotBugs reports
 - Excludes `Main.java` from analysis (GUI main class)
 - Configured for Java 17

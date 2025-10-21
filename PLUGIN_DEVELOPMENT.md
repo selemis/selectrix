@@ -1,23 +1,23 @@
 # Plugin Development Guide
 
-This guide explains how to develop external plugins for File Selector.
+This guide explains how to develop external plugins for Selectrix.
 
 ## Overview
 
-File Selector supports external plugins through a simple plugin API. Plugins are loaded dynamically from JAR files placed in the `plugins/` directory.
+Selectrix supports external plugins through a simple plugin API. Plugins are loaded dynamically from JAR files placed in the `plugins/` directory.
 
 ## Getting the Plugin API
 
 ### Option 1: Maven Local (Recommended)
 
-From the FileSelector project root, publish the API to your local Maven repository:
+From the Selectrix project root, publish the API to your local Maven repository:
 
 ```bash
 ./gradlew publishPluginApiPublicationToMavenLocal
 ```
 
 This publishes to `~/.m2/repository` as:
-- **Group ID:** `org.example.fileselector`
+- **Group ID:** `com.selectrix.selectrix`
 - **Artifact ID:** `plugin-api`
 - **Version:** `1.0`
 
@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.example.fileselector:plugin-api:1.0'
+    compileOnly 'com.selectrix.selectrix:plugin-api:1.0'
 }
 ```
 
@@ -69,7 +69,7 @@ your-plugin/
 │       │       └── YourAction.java
 │       └── resources/
 │           └── META-INF/services/
-│               └── org.example.plugin.FileAction
+│               └── com.selectrix.plugin.FileAction
 ├── lib/
 │   └── file-selector-plugin-api-1.0.jar
 └── build.gradle
@@ -92,8 +92,8 @@ Create a class that implements `FileAction`:
 ```java
 package your.package;
 
-import org.example.plugin.ActionLogger;
-import org.example.plugin.FileAction;
+import com.selectrix.plugin.ActionLogger;
+import com.selectrix.plugin.FileAction;
 import java.io.File;
 
 public class YourAction implements FileAction {
@@ -122,7 +122,7 @@ public class YourAction implements FileAction {
 ### 4. Register the Plugin
 
 Create the ServiceLoader configuration file at:
-`src/main/resources/META-INF/services/org.example.plugin.FileAction`
+`src/main/resources/META-INF/services/com.selectrix.plugin.FileAction`
 
 Add your implementation class (fully qualified):
 
@@ -140,8 +140,8 @@ Build your plugin JAR:
 
 ## Installing a Plugin
 
-1. Copy your plugin JAR to the File Selector's `plugins/` directory
-2. Launch File Selector
+1. Copy your plugin JAR to the Selectrix's `plugins/` directory
+2. Launch Selectrix
 3. Your plugin will appear in the Action dropdown
 
 ## API Reference
@@ -214,7 +214,7 @@ See the `UnzipPlugin` project as a complete example of an external plugin implem
 ### ClassNotFoundException
 
 - Ensure all required classes are included in your plugin JAR
-- Verify the plugin API JAR version matches the File Selector version
+- Verify the plugin API JAR version matches the Selectrix version
 - Check that the ServiceLoader configuration file contains the correct fully-qualified class name
 
 ### Plugin Appears But Doesn't Work

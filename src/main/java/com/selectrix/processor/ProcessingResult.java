@@ -1,4 +1,4 @@
-package org.example.processor;
+package com.selectrix.processor;
 
 public class ProcessingResult {
     private final int successCount;

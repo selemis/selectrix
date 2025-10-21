@@ -1,7 +1,7 @@
-package org.example.ui;
+package com.selectrix.ui;
 
-import org.example.config.UIConfig;
-import org.example.model.FileTableModel;
+import com.selectrix.config.UIConfig;
+import com.selectrix.model.FileTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;

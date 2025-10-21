@@ -1,8 +1,8 @@
-package org.example.plugin.impl;
+package com.selectrix.plugin.impl;
 
-import org.example.plugin.ActionLogger;
-import org.example.plugin.FileAction;
-import org.example.plugin.ProcessingContext;
+import com.selectrix.plugin.ActionLogger;
+import com.selectrix.plugin.FileAction;
+import com.selectrix.plugin.ProcessingContext;
 
 import java.io.File;
 

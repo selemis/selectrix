@@ -1,4 +1,4 @@
-package org.example.plugin;
+package com.selectrix.plugin;
 
 import java.io.File;
 

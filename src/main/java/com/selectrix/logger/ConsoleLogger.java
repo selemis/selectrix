@@ -1,6 +1,6 @@
-package org.example.logger;
+package com.selectrix.logger;
 
-import org.example.plugin.ActionLogger;
+import com.selectrix.plugin.ActionLogger;
 
 import javax.swing.*;
 
