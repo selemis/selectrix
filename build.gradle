@@ -51,6 +51,7 @@ dependencies {
     // External plugins (fetched from Maven Local)
     externalPlugins 'org.example.plugins:unzip-plugin:1.0'
     externalPlugins 'org.example.plugins:flatten-plugin:1.0'
+    externalPlugins 'org.example.plugins:pdf-concatenate-plugin:1.0'
 }
 
 test {
