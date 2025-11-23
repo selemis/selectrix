@@ -20,17 +20,17 @@ application {
 
 repositories {
     mavenLocal()
-    maven {
-        url 'https://pkgs.dev.azure.com/interamerican/_packaging/interamerican/maven/v1'
-        name 'interamerican'
-        credentials {
-            username = project.findProperty('systemProp.https.proxyUser') ?: System.getenv('AZURE_DEVOPS_USER')
-            password = project.findProperty('systemProp.https.proxyPassword') ?: System.getenv('AZURE_DEVOPS_PASSWORD')
-        }
-        authentication {
-            basic(BasicAuthentication)
-        }
-    }
+//    maven {
+//        url 'https://pkgs.dev.azure.com/interamerican/_packaging/interamerican/maven/v1'
+//        name 'interamerican'
+//        credentials {
+//            username = project.findProperty('systemProp.https.proxyUser') ?: System.getenv('AZURE_DEVOPS_USER')
+//            password = project.findProperty('systemProp.https.proxyPassword') ?: System.getenv('AZURE_DEVOPS_PASSWORD')
+//        }
+//        authentication {
+//            basic(BasicAuthentication)
+//        }
+//    }
     mavenCentral()
 }
 
@@ -52,6 +52,7 @@ dependencies {
     externalPlugins 'com.selectrix.plugins:unzip-plugin:1.0'
     externalPlugins 'com.selectrix.plugins:flatten-plugin:1.0'
     externalPlugins 'com.selectrix.plugins:pdf-concatenate-plugin:1.0'
+    externalPlugins 'com.selectrix.plugins:kebab-case-rename-plugin:1.0'
 }
 
 test {
