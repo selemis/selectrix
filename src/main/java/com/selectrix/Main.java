@@ -30,8 +30,10 @@ public class Main extends JFrame {
     private JButton deselectAllButton;
     private JButton selectFilesButton;
     private JButton selectDirsButton;
+    private JButton reloadButton;
     private List<JLabel> labels;
     private FileProcessor fileProcessor;
+    private File currentDirectory;
 
     public Main() {
         loadUIConfiguration();
@@ -80,6 +82,7 @@ public class Main extends JFrame {
         createButtons(uiFont);
         createActionCombo(uiFont);
 
+        buttonPanel.add(reloadButton);
         buttonPanel.add(selectAllButton);
         buttonPanel.add(deselectAllButton);
         buttonPanel.add(selectFilesButton);
@@ -124,6 +127,11 @@ public class Main extends JFrame {
     }
 
     private void createButtons(Font uiFont) {
+        reloadButton = new JButton("Reload");
+        reloadButton.setFont(uiFont);
+        reloadButton.addActionListener(e -> reloadCurrentDirectory());
+        reloadButton.setEnabled(false); // Disabled until a directory is loaded
+
         selectAllButton = new JButton("Select All");
         selectAllButton.setFont(uiFont);
         selectAllButton.addActionListener(e -> selectAll());
@@ -240,6 +248,7 @@ public class Main extends JFrame {
     }
 
     private void loadFolderContents(File folder) {
+        currentDirectory = folder;
         tableModel.clear();
 
         File[] files = folder.listFiles();
@@ -249,8 +258,23 @@ public class Main extends JFrame {
             }
         }
 
+        // Enable reload button now that we have a directory loaded
+        reloadButton.setEnabled(true);
+
         // Auto-resize columns to fit content after loading files
         SwingUtilities.invokeLater(() -> fileTable.autoResizeColumns());
+    }
+
+    private void reloadCurrentDirectory() {
+        if (currentDirectory != null && currentDirectory.exists()) {
+            loadFolderContents(currentDirectory);
+        } else if (currentDirectory != null) {
+            JOptionPane.showMessageDialog(this,
+                    "Current directory no longer exists: " + currentDirectory.getAbsolutePath(),
+                    "Directory Not Found",
+                    JOptionPane.ERROR_MESSAGE);
+            reloadButton.setEnabled(false);
+        }
     }
 
     private void refreshUI() {
@@ -293,8 +317,11 @@ public class Main extends JFrame {
     }
 
     private void updateButtons(Font uiFont) {
+        reloadButton.setFont(uiFont);
         selectAllButton.setFont(uiFont);
         deselectAllButton.setFont(uiFont);
+        selectFilesButton.setFont(uiFont);
+        selectDirsButton.setFont(uiFont);
         processFilesButton.setFont(uiFont);
     }
 

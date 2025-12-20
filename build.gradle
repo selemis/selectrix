@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'com.selectrix'
-version = '1.0.0-SNAPSHOT'
+version = '1.0.1-SNAPSHOT'
 
 // Application plugin configuration
 application {
@@ -52,7 +52,7 @@ dependencies {
     externalPlugins 'com.selectrix.plugins:unzip-plugin:1.0'
     externalPlugins 'com.selectrix.plugins:flatten-plugin:1.0'
     externalPlugins 'com.selectrix.plugins:pdf-concatenate-plugin:1.0'
-    externalPlugins 'com.selectrix.plugins:kebab-case-rename-plugin:1.0'
+    externalPlugins 'com.selectrix.plugins:kebab-case-rename-plugin:1.1'
 }
 
 test {
